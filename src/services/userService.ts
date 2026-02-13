@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma";
-import { Role } from "@prisma/client";
+
+type Role = "USER" | "ADMIN" | "MODERATOR";
 
 // Create a new user
 export const createUser = async (
