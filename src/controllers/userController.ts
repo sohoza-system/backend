@@ -65,6 +65,10 @@ export const updateUser = async (req: Request, res: Response) => {
     const { id } = req.params;
     const data = req.body;
 
+    if (req.file) {
+      data.profileImage = req.file.path; // Cloudinary URL
+    }
+
     const user = await userService.updateUser(Number(id), data);
     res.status(200).json({ message: "User updated successfully", user });
   } catch (error: any) {

@@ -1,6 +1,7 @@
 import express from "express";
 import * as userController from "../controllers/userController";
 import { authenticate, authorize } from "../middleware/auth.middleware";
+import { upload } from "../middleware/upload.middleware";
 
 const router = express.Router();
 
@@ -20,7 +21,7 @@ router.get("/role/list", authenticate, authorize(["ADMIN", "SUPERADMIN"]), userC
 router.get("/:id", authenticate, userController.getUserById);
 
 // Update user
-router.put("/:id", authenticate, userController.updateUser);
+router.put("/:id", authenticate, upload.single("profileImage"), userController.updateUser);
 
 // Soft delete user
 router.delete("/:id/soft", authenticate, authorize(["ADMIN", "SUPERADMIN"]), userController.softDeleteUser);
