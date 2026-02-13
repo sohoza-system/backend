@@ -43,7 +43,7 @@ export const getUserById = async (req: Request, res: Response) => {
 // Get user by email
 export const getUserByEmail = async (req: Request, res: Response) => {
   try {
-    const { email } = req.query;
+    const { email } = req.params;
 
     if (!email) {
       return res.status(400).json({ message: "Email is required" });

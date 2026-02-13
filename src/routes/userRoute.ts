@@ -9,14 +9,14 @@ router.post("/", userController.createUser);
 // Get all users
 router.get("/", userController.getAllUsers);
 
-// Get user by ID
-router.get("/:id", userController.getUserById);
-
-// Get user by email
+// Get user by email (Specific path)
 router.get("/email/:email", userController.getUserByEmail);
 
-// Get users by role
+// Get users by role (Specific path)
 router.get("/role/list", userController.getUsersByRole);
+
+// Get user by ID (Generic path - must be after specific paths)
+router.get("/:id", userController.getUserById);
 
 // Update user
 router.put("/:id", userController.updateUser);

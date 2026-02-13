@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import userRouter from "./routes/userRoute";
+import router from "./routes/index";
 
 dotenv.config();
 
@@ -14,7 +14,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
 
 // Routes
-app.use("/api/users", userRouter);
+app.use("/api", router);
 
 // Health check
 app.get("/health", (req, res) => {
