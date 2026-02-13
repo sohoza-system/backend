@@ -11,4 +11,31 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// Role Enum
+enum Role {
+  SUPERADMIN
+  ADMIN
+  USER
+}
+
+// User Model
+model User {
+  id              Int      @id @default(autoincrement())
+  email           String   @unique
+  name            String?
+  password        String
+  role            Role     @default(USER)
+  isActive        Boolean  @default(true)
+  emailVerified   Boolean  @default(false)
+  phone           String?
+  profileImage    String?
+  bio             String?
+  lastLogin       DateTime?
+  deletedAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
