@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma";
+import bcrypt from "bcryptjs";
 
 type Role = "USER" | "ADMIN" | "SUPERADMIN";
 
@@ -14,7 +15,7 @@ export const createUser = async (
       data: {
         email,
         name,
-        password, // In production, hash this password!
+        password: await bcrypt.hash(password, 10),
         role,
       },
     });
