@@ -11,5 +11,83 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+}
+
+
+// ROLE ENUM
+
+enum Role {
+  USER
+  ADMIN
+}
+
+
+// USER (Managed by your teammate)
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+
+  posts     Post[]
+  comments  Comment[]
+}
+
+
+// POST (Your responsibility)
+
+model Post {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?   // optional short preview
+  content     String
+  published   Boolean?  @default(false)
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  authorId    Int
+  author      User      @relation(fields: [authorId], references: [id])
+
+  comments    Comment[]
+  categories  PostCategory[]
+}
+
+
+// COMMENT
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime? @default(now())
+
+  authorId  Int
+  postId    Int
+
+  author    User     @relation(fields: [authorId], references: [id])
+  post      Post     @relation(fields: [postId], references: [id])
+}
+
+
+// CATEGORY
+
+model Category {
+  id    Int     @id @default(autoincrement())
+  name  String  @unique
+
+  posts PostCategory[]
+}
+
+
+// POST-CATEGORY JOIN TABLE
+
+model PostCategory {
+  postId     Int
+  categoryId Int
+
+  post       Post      @relation(fields: [postId], references: [id])
+  category   Category  @relation(fields: [categoryId], references: [id])
+
+  @@id([postId, categoryId])
 }
