@@ -43,7 +43,7 @@ export const getUserById = async (req: Request, res: Response) => {
 // Get user by email
 export const getUserByEmail = async (req: Request, res: Response) => {
   try {
-    const { email } = req.query;
+    const { email } = req.params;
 
     if (!email) {
       return res.status(400).json({ message: "Email is required" });
@@ -64,6 +64,10 @@ export const updateUser = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const data = req.body;
+
+    if (req.file) {
+      data.profileImage = req.file.path; // Cloudinary URL
+    }
 
     const user = await userService.updateUser(Number(id), data);
     res.status(200).json({ message: "User updated successfully", user });

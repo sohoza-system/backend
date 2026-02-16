@@ -1,19 +1,11 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
-  provider = "prisma-client"
+  provider = "prisma-client-js"
   output   = "../generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
-
 
 // Role Enum
 enum Role {
@@ -24,18 +16,44 @@ enum Role {
 
 // User Model
 model User {
-  id              Int      @id @default(autoincrement())
-  email           String   @unique
-  name            String?
-  password        String
-  role            Role     @default(USER)
-  isActive        Boolean  @default(true)
-  emailVerified   Boolean  @default(false)
-  phone           String?
-  profileImage    String?
-  bio             String?
-  lastLogin       DateTime?
-  deletedAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  name          String?
+  password      String
+  role          Role      @default(USER)
+  isActive      Boolean   @default(true)
+  emailVerified Boolean   @default(false)
+  phone         String?
+  profileImage  String?
+  bio           String?
+  lastLogin     DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Team Member Model
+model TeamMember {
+  id        Int      @id @default(autoincrement())
+  name      String
+  role      String
+  email     String   @unique
+  bio       String?
+  image     String?
+  status    String   @default("active") // active, inactive
+  socials   Json? // Stores social media links { linkedin: "", twitter: "" }
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Service Model
+model Service {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  icon        String?
+  features    String[]
+  status      String   @default("active") // active, inactive
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
