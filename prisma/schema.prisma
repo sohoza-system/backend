@@ -7,14 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-// Role Enum
-enum Role {
-  SUPERADMIN
-  ADMIN
-  USER
-}
-
-// User Model
 model User {
   id            Int       @id @default(autoincrement())
   email         String    @unique
@@ -30,9 +22,10 @@ model User {
   deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  friends       User[]    @relation("UserFriends")
+  friendOf      User[]    @relation("UserFriends")
 }
 
-// Team Member Model
 model TeamMember {
   id        Int      @id @default(autoincrement())
   name      String
@@ -40,20 +33,49 @@ model TeamMember {
   email     String   @unique
   bio       String?
   image     String?
-  status    String   @default("active") // active, inactive
-  socials   Json? // Stores social media links { linkedin: "", twitter: "" }
+  status    String   @default("active")
+  socials   Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// Service Model
 model Service {
   id          Int      @id @default(autoincrement())
   name        String
   description String
   icon        String?
   features    String[]
-  status      String   @default("active") // active, inactive
+  status      String   @default("active")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Post {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  status    String   @default("published")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Activity {
+  id          Int      @id @default(autoincrement())
+  type        String
+  description String
+  createdAt   DateTime @default(now())
+}
+
+model Visit {
+  id         Int      @id @default(autoincrement())
+  pagePath   String
+  deviceType String
+  source     String
+  createdAt  DateTime @default(now())
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  USER
 }
