@@ -42,6 +42,7 @@ model Post {
   title       String
   description String?   // optional short preview
   content     String
+  imageUrl    String?
   published   Boolean?  @default(false)
   createdAt   DateTime? @default(now())
   updatedAt   DateTime? @updatedAt
