@@ -1,129 +1,116 @@
-# Sohoza System - Backend
+## Database
+Database name: `sohoza_db`
 
-Welcome to the backend API for the Sohoza System. This project is built using a modern technology stack to provide a robust, scalable, and efficient server-side application.
 
-## 🚀 Technical Stack
+# SOHOZA Backend API
 
-- **Runtime**: [Node.js](https://nodejs.org/)
-- **Framework**: [Express.js](https://expressjs.com/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **ORM**: [Prisma](https://www.prisma.io/)
-- **Database**: [PostgreSQL](https://www.postgresql.org/)
-- **Authentication**: [JSON Web Tokens (JWT)](https://jwt.io/) & [bcryptjs](https://www.npmjs.com/package/bcryptjs)
-- **Media Storage**: [Cloudinary](https://cloudinary.com/)
-- **API Testing**: [Axios](https://axios-http.com/)
+A backend API for managing **blog posts**, **contact messages**, **users**, **comments**, and **categories**. Built with **Node.js**, **Express**, **Prisma ORM**, and **PostgreSQL**.
 
 ---
 
-## 🛠️ Getting Started
+## Features
 
-### Prerequisites
-
-Ensure you have the following installed:
-- Node.js (v22 or higher)
-- PostgreSQL
-- npm or yarn
-
-### Installation
-
-1.  **Clone the repository**:
-    ```bash
-    git clone <repository-url>
-    cd sohoza-system/backend
-    ```
-
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
-
-3.  **Configure Environment Variables**:
-    Create a `.env` file in the root directory and copy the contents from `.env.example`. Replace the placeholders with your actual configuration.
-    ```bash
-    cp .env.example .env
-    ```
-
-4.  **Database Migration**:
-    Generate the Prisma client and run migrations (if applicable) or push the schema to your database.
-    ```bash
-    npx prisma generate
-    npx prisma db push
-    ```
-
-### Running the App
-
-- **Development Mode**:
-  ```bash
-  npm run dev
-  ```
-- **Production Mode**:
-  ```bash
-  npm start
-  ```
+- Create, read, update, and delete blog posts  
+- Submit and retrieve contact messages  
+- Manage users and roles (`USER`, `ADMIN`)  
+- Handle comments and categories  
+- Connects to a PostgreSQL database using Prisma  
 
 ---
 
-## 📖 API Documentation
+## Tech Stack
 
-**Base URL**: `http://localhost:5000/api`
-
-### 🏥 System
-- **Health Check**: `GET /health` (Relative to server root)
-  - *Description*: Verifies if the server is running.
-  - *Auth*: None
-
-### 🔐 Authentication
-- **Login**: `POST /auth/login`
-  - *Body*: `{ "email": "string", "password": "string" }`
-  - *Description*: Authenticates a user and returns a JWT token.
-
-### 👥 User Management (`/users`)
-- **Register / Create User**: `POST /`
-  - *Body*: `email`, `name`, `password`, `role`
-- **Get All Users**: `GET /`
-  - *Auth*: `ADMIN`, `SUPERADMIN`
-- **Get User by Email**: `GET /email/:email`
-- **Get Users by Role**: `GET /role/list?role=ROLE_NAME`
-- **Get User by ID**: `GET /:id`
-- **Update User**: `PUT /:id`
-  - *Multipart*: `profileImage` (File)
-- **Soft Delete User**: `DELETE /:id/soft`
-- **Hard Delete User**: `DELETE /:id/hard`
-
-### 🤝 Team Members (`/team-members`)
-- **Create**: `POST /`
-- **List All**: `GET /`
-- **Get by ID**: `GET /:id`
-- **Update**: `PUT /:id`
-- **Delete**: `DELETE /:id`
-
-### 🛠️ Services (`/services`)
-- **Create**: `POST /`
-- **List All**: `GET /`
-- **Get by ID**: `GET /:id`
-- **Update**: `PUT /:id`
-- **Delete**: `DELETE /:id`
-
-### 📊 Analytics (`/analytics`)
-- **Dashboard Analytics**: `GET /dashboard`
-- **General Analytics**: `GET /general`
-- **Debug Tables**: `GET /debug-tables`
+- **Node.js** – JavaScript runtime  
+- **Express** – API framework  
+- **Prisma ORM** – Database toolkit  
+- **PostgreSQL** – Relational database  
+- **TypeScript** – Strong typing  
+- **dotenv** – Environment variable management  
 
 ---
 
-## 📂 Project Structure
+## Installation & Setup
 
-- `src/controllers`: Request handlers.
-- `src/routes`: API route definitions.
-- `src/services`: Business logic layer.
-- `src/lib`: Library configurations (Prisma, etc.).
-- `src/middleware`: Custom Express middlewares (Auth, error handling).
-- `prisma`: Database schema and migrations.
+1. **Clone the repository**
+```bash
+git clone <your_repo_url>
+cd backend
 
----
+2. **Install dependencies**
+npm install
+Create a .env file in the root directory:
 
-## 📜 Available Scripts
+DATABASE_URL="postgresql://postgres:<your_password>@localhost:5433/sohoza_db?schema=public"
+PORT=5000
+Generate Prisma client
 
-- `npm run dev`: Starts the development server with `ts-node-dev`.
-- `npm start`: Starts the application in production mode.
-- `npx prisma studio`: Opens the Prisma Studio GUI to view your data.
+npx prisma generate
+Run migrations
+
+npx prisma migrate dev --name init
+Start the development server
+
+npm run dev
+Server will run at: http://localhost:5000
+
+API Endpoints
+
+Posts
+Method	Endpoint	Description
+GET	/api/posts	Get all posts
+GET	/api/posts/:id	Get single post by id
+POST	/api/posts	Create a new post
+PUT	/api/posts/:id	Update an existing post
+DELETE	/api/posts/:id	Delete a post
+
+Contact Messages
+Method	Endpoint	Description
+POST	/api/contact	Submit a contact message
+GET	/api/contact	Get all messages (admin only)
+Environment Variables
+Create a .env file with the following variables:
+
+DATABASE_URL="postgresql://<username>:<password>@localhost:5433/sohoza_db?schema=public"
+PORT=5000
+Replace <username> and <password> with your PostgreSQL credentials.
+
+Folder Structure
+backend/
+├─ src/
+│  ├─ lib/           # Prisma client setup
+│  ├─ routes/        # API routes (posts, contact)
+│  └─ server.ts      # Express server entry point
+├─ prisma/
+│  └─ schema.prisma  # Prisma schema
+├─ generated/        # Prisma client output
+├─ .env              # Environment variables
+├─ package.json      # Node project config
+Testing
+Use Postman, Insomnia, or curl to test endpoints.
+
+Example: Create a post via POST /api/posts with JSON body:
+
+{
+  "title": "My first blog",
+  "description": "Short preview",
+  "content": "This is the full content of the post.",
+  "authorId": 1
+}
+Example: Submit a contact message via POST /api/contact:
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "message": "Hello! I love your blog."
+}
+Future Improvements
+Add authentication (JWT) for user/admin roles
+
+Add pagination for posts and messages
+
+Add upload places for post images
+
+Add comments CRUD endpoints
+
+Add category management endpoints
+

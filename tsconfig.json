@@ -1,24 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "CommonJS",
-    "lib": ["ES2020"],
-    "rootDir": "src",
-    "baseUrl": ".",
-    "paths": {
-      "@prisma/client": ["./generated/prisma"],
-      "@prisma/*": ["./generated/prisma/*"]
-    },
-    "outDir": "dist",
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "strict": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "moduleResolution": "node",
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true,
-    "types": ["node"]
+    "types": ["node"],
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "isolatedModules": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src"]
 }
