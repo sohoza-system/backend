@@ -6,90 +6,143 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  name          String?
+  password      String
+  role          Role      @default(USER)
+  isActive      Boolean   @default(true)
+  emailVerified Boolean   @default(false)
+  phone         String?
+  profileImage  String?
+  bio           String?
+  lastLogin     DateTime?
+  deletedAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-// ROLE ENUM
+  posts    Post[]
+  comments Comment[]
+  friends  User[]    @relation("UserFriends")
+  friendOf User[]    @relation("UserFriends")
 
-enum Role {
-  USER
-  ADMIN
+  @@map("user")
 }
 
-
-// USER (Managed by your teammate)
-
-model User {
+model TeamMember {
   id        Int      @id @default(autoincrement())
   name      String
+  role      String
   email     String   @unique
-  password  String
-  role      Role     @default(USER)
+  bio       String?
+  image     String?
+  status    String   @default("active")
+  socials   Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  posts     Post[]
-  comments  Comment[]
+  @@map("teammember")
 }
 
+model Service {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  icon        String?
+  features    String[]
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-// POST (Your responsibility)
+  @@map("service")
+}
 
 model Post {
   id          Int       @id @default(autoincrement())
   title       String
-  description String?   // optional short preview
+  description String? // optional short preview
   content     String
   published   Boolean?  @default(false)
+  status      String    @default("published")
   createdAt   DateTime? @default(now())
   updatedAt   DateTime? @updatedAt
 
-  authorId    Int
-  author      User      @relation(fields: [authorId], references: [id])
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
 
-  comments    Comment[]
-  categories  PostCategory[]
+  comments   Comment[]
+  categories PostCategory[]
+
+  @@map("post")
 }
 
-
-// COMMENT
-
 model Comment {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   content   String
   createdAt DateTime? @default(now())
 
-  authorId  Int
-  postId    Int
+  authorId Int
+  postId   Int
 
-  author    User     @relation(fields: [authorId], references: [id])
-  post      Post     @relation(fields: [postId], references: [id])
+  author User @relation(fields: [authorId], references: [id])
+  post   Post @relation(fields: [postId], references: [id])
+
+  @@map("comment")
 }
-
-
-// CATEGORY
 
 model Category {
-  id    Int     @id @default(autoincrement())
-  name  String  @unique
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
   posts PostCategory[]
+
+  @@map("category")
 }
-
-
-// POST-CATEGORY JOIN TABLE
 
 model PostCategory {
   postId     Int
   categoryId Int
 
-  post       Post      @relation(fields: [postId], references: [id])
-  category   Category  @relation(fields: [categoryId], references: [id])
+  post     Post     @relation(fields: [postId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
 
   @@id([postId, categoryId])
+  @@map("postcategory")
 }
 
+model Activity {
+  id          Int      @id @default(autoincrement())
+  type        String
+  description String
+  createdAt   DateTime @default(now())
+
+  @@map("activity")
+}
+
+model Visit {
+  id         Int      @id @default(autoincrement())
+  pagePath   String
+  deviceType String
+  source     String
+  createdAt  DateTime @default(now())
+
+  @@map("visit")
+}
 
 model ContactMessage {
   id        Int      @id @default(autoincrement())
   name      String
   email     String
+  subject   String?
   message   String
   createdAt DateTime @default(now())
+
+  @@map("contactmessage")
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  USER
 }

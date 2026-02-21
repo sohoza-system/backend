@@ -28,6 +28,7 @@ export const createTeamMember = async (data: CreateTeamMemberInput) => {
     });
     return member;
   } catch (error) {
+    console.error('ORIGINAL PRISMA ERROR in createTeamMember:', error);
     throw new Error(`Error creating team member: ${error}`);
   }
 };
