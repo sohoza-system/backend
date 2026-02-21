@@ -19,11 +19,17 @@ export interface UpdateServiceInput {
 // Create a new service
 export const createService = async (data: CreateServiceInput) => {
     try {
+        // Handle features if it's sent as a string (comma-separated)
+        if (typeof data.features === 'string') {
+            data.features = (data.features as string).split(',').map(f => f.trim());
+        }
+
         const service = await prisma.service.create({
             data,
         });
         return service;
     } catch (error) {
+        console.error('ORIGINAL PRISMA ERROR in createService:', error);
         throw new Error(`Error creating service: ${error}`);
     }
 };
