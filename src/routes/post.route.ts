@@ -38,7 +38,7 @@ const router = express.Router();
  * @swagger
  * /posts:
  *   get:
- *     summary: Get all posts with pagination
+ *     summary: Get all posts with pagination, search, and filtering
  *     tags: [Posts]
  *     parameters:
  *       - in: query
@@ -51,11 +51,44 @@ const router = express.Router();
  *         schema:
  *           type: integer
  *         description: Number of posts per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Keyword to search in title, content, or description
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Filter posts by category name
  *     responses:
  *       200:
  *         description: List of posts
  */
 router.get('/', postController.getAllPosts);
+
+/**
+ * @swagger
+ * /posts/{id}/related:
+ *   get:
+ *     summary: Get related posts (Recommendation)
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of related posts to return
+ *     responses:
+ *       200:
+ *         description: List of related posts
+ */
+router.get('/:id/related', postController.getRelatedPosts);
 
 /**
  * @swagger

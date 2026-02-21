@@ -31,11 +31,25 @@ export const createPost = async (data: CreatePostInput) => {
     }
 };
 
-// Get all posts with pagination
-export const getAllPosts = async (skip: number = 0, take: number = 10) => {
+// Get all posts with pagination, search, and category filtering
+export const getAllPosts = async (skip: number = 0, take: number = 10, search?: string, category?: string) => {
     try {
+        const where: any = {
+            OR: search ? [
+                { title: { contains: search, mode: 'insensitive' } },
+                { content: { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } }
+            ] : undefined,
+            categories: category ? {
+                some: {
+                    name: { contains: category, mode: 'insensitive' }
+                }
+            } : undefined
+        };
+
         const [posts, total] = await Promise.all([
             prisma.post.findMany({
+                where,
                 skip,
                 take,
                 orderBy: { createdAt: 'desc' },
@@ -45,12 +59,59 @@ export const getAllPosts = async (skip: number = 0, take: number = 10) => {
                     categories: true
                 }
             }),
-            prisma.post.count()
+            prisma.post.count({ where })
         ]);
         return { posts, total };
     } catch (error: any) {
         console.error("PRISMA ERROR in getAllPosts:", error);
         throw new Error("Failed to fetch posts");
+    }
+};
+
+// Recommendation Algorithm: Get related posts based on shared categories
+export const getRelatedPosts = async (postId: number, limit: number = 3) => {
+    try {
+        const sourcePost = await prisma.post.findUnique({
+            where: { id: postId },
+            include: { categories: true }
+        });
+
+        if (!sourcePost) throw new Error("Source post not found");
+
+        const categoryIds = sourcePost.categories.map(c => c.categoryId);
+
+        if (categoryIds.length === 0) {
+            // Fallback: Get latest posts if no categories
+            return await prisma.post.findMany({
+                where: { id: { not: postId } },
+                take: limit,
+                orderBy: { createdAt: 'desc' }
+            });
+        }
+
+        // Find posts with the most common categories
+        const relatedPosts = await prisma.post.findMany({
+            where: {
+                id: { not: postId },
+                categories: {
+                    some: {
+                        categoryId: { in: categoryIds }
+                    }
+                }
+            },
+            take: limit,
+            include: {
+                categories: true,
+                author: true
+            },
+            orderBy: {
+                createdAt: 'desc' // Secondary sort by date
+            }
+        });
+
+        return relatedPosts;
+    } catch (error) {
+        throw new Error(`Error fetching related posts: ${error}`);
     }
 };
 

@@ -105,6 +105,11 @@ router.post("/login", authController.login);
  *         schema:
  *           type: integer
  *         description: Number of users per page
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Keyword to search in name or email
  *     responses:
  *       200:
  *         description: List of all users

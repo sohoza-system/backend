@@ -25,7 +25,9 @@ export const createUser = async (req: Request, res: Response) => {
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
     const { skip, take } = getPagination(req.query);
-    const { users, total } = await userService.getAllUsers(skip, take);
+    const { search } = req.query;
+
+    const { users, total } = await userService.getAllUsers(skip, take, search as string);
 
     res.status(200).json({
       data: users,
