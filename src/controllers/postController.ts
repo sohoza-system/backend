@@ -1,11 +1,25 @@
 import { Request, Response } from "express";
 import * as postService from "../services/postService";
+import { getPagination } from "../utils/pagination";
+import cloudinary from "../config/cloudinary";
 
 // Create a new post
 export const createPost = async (req: Request, res: Response) => {
     try {
-        const data = req.body;
-        const post = await postService.createPost(data);
+        const { title, content, authorId } = req.body;
+        let imageUrl: string | null = null;
+
+        if (req.file) {
+            const result = await cloudinary.uploader.upload(req.file.path);
+            imageUrl = result.secure_url;
+        }
+
+        const post = await postService.createPost({
+            title,
+            content,
+            authorId: Number(authorId),
+            imageUrl
+        });
         res.status(201).json({ message: "Post created successfully", post });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -15,8 +29,15 @@ export const createPost = async (req: Request, res: Response) => {
 // Get all posts
 export const getAllPosts = async (req: Request, res: Response) => {
     try {
-        const posts = await postService.getAllPosts();
-        res.status(200).json(posts);
+        const { skip, take } = getPagination(req.query);
+        const { posts, total } = await postService.getAllPosts(skip, take);
+
+        res.status(200).json({
+            data: posts,
+            total,
+            page: Number(req.query.page) || 1,
+            totalPages: Math.ceil(total / take)
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

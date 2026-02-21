@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import * as serviceService from "../services/serviceService";
 
+import { getPagination } from "../utils/pagination";
+
 // Create a new service
 export const createService = async (req: Request, res: Response) => {
     try {
@@ -15,8 +17,15 @@ export const createService = async (req: Request, res: Response) => {
 // Get all services
 export const getAllServices = async (req: Request, res: Response) => {
     try {
-        const services = await serviceService.getAllServices();
-        res.status(200).json({ message: "Services fetched successfully", services });
+        const { skip, take } = getPagination(req.query);
+        const { services, total } = await serviceService.getAllServices(skip, take);
+
+        res.status(200).json({
+            data: services,
+            total,
+            page: Number(req.query.page) || 1,
+            totalPages: Math.ceil(total / take)
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

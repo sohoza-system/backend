@@ -34,11 +34,18 @@ export const createService = async (data: CreateServiceInput) => {
     }
 };
 
-// Get all services
-export const getAllServices = async () => {
+// Get all services with pagination
+export const getAllServices = async (skip: number = 0, take: number = 10) => {
     try {
-        const services = await prisma.service.findMany();
-        return services;
+        const [services, total] = await Promise.all([
+            prisma.service.findMany({
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' }
+            }),
+            prisma.service.count()
+        ]);
+        return { services, total };
     } catch (error) {
         throw new Error(`Error fetching services: ${error}`);
     }

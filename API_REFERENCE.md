@@ -10,8 +10,8 @@ This document provides a list of all available API endpoints and instructions on
 ## 👥 Users
 Endpoints for managing user accounts.
 
-### Create User (Register)
-- **POST** `/users`
+### User Registration
+- **POST** `/auth/register`
 - **Body (JSON):**
 ```json
 {

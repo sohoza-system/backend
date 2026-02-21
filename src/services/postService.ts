@@ -5,6 +5,7 @@ export interface CreatePostInput {
     description?: string;
     content: string;
     authorId: number;
+    imageUrl?: string | null;
 }
 
 export interface UpdatePostInput {
@@ -30,20 +31,26 @@ export const createPost = async (data: CreatePostInput) => {
     }
 };
 
-// Get all posts
-export const getAllPosts = async () => {
+// Get all posts with pagination
+export const getAllPosts = async (skip: number = 0, take: number = 10) => {
     try {
-        const posts = await prisma.post.findMany({
-            include: {
-                author: true,
-                comments: true,
-            },
-            orderBy: { createdAt: 'desc' }
-        });
-        return posts;
-    } catch (error) {
-        console.error('ORIGINAL PRISMA ERROR in getAllPosts:', error);
-        throw new Error(`Error fetching posts: ${error}`);
+        const [posts, total] = await Promise.all([
+            prisma.post.findMany({
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' },
+                include: {
+                    author: true,
+                    comments: true,
+                    categories: true
+                }
+            }),
+            prisma.post.count()
+        ]);
+        return { posts, total };
+    } catch (error: any) {
+        console.error("PRISMA ERROR in getAllPosts:", error);
+        throw new Error("Failed to fetch posts");
     }
 };
 
