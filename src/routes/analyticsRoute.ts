@@ -3,7 +3,28 @@ import * as analyticsController from "../controllers/analyticsController";
 
 const router = express.Router();
 
+/**
+ * @swagger
+ * /analytics/dashboard:
+ *   get:
+ *     summary: Get dashboard analytics data
+ *     tags: [Analytics]
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics
+ */
 router.get("/dashboard", analyticsController.getDashboardAnalytics);
+
+/**
+ * @swagger
+ * /analytics/general:
+ *   get:
+ *     summary: Get general system analytics
+ *     tags: [Analytics]
+ *     responses:
+ *       200:
+ *         description: General analytics data
+ */
 router.get("/general", analyticsController.getGeneralAnalytics);
 router.get("/debug-tables", async (req, res) => {
     try {
