@@ -13,7 +13,8 @@ async function request(url, method = 'GET', data = null) {
     const response = await fetch(url, options);
     const json = await response.json();
     if (!response.ok) {
-        throw new Error(JSON.stringify(json));
+        const msg = json.message || JSON.stringify(json);
+        throw new Error(msg.replace(/\\n/g, '\n'));
     }
     return json;
 }
@@ -29,7 +30,8 @@ async function verifyTeamMembers() {
             role: 'Developer',
             email: `john.doe.${Date.now()}@example.com`,
             bio: 'Full Stack Developer',
-            status: 'active'
+            status: 'active',
+            image: 'https://via.placeholder.com/150',
         });
         console.log('✅ Create Member: Success', res);
         memberId = res.member.id;
@@ -83,8 +85,8 @@ async function verifyServices() {
         const res = await request(`${API_URL}/services`, 'POST', {
             name: 'Web Development',
             description: 'Building modern web applications',
-            features: ['Responsive Design', 'SEO Optimized'],
-            status: 'active'
+            status: 'active',
+            icon: 'code',
         });
         console.log('✅ Create Service: Success', res);
         serviceId = res.service.id;
