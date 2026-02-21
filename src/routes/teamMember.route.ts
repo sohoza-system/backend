@@ -1,5 +1,7 @@
 import express from "express";
 import * as teamMemberController from "../controllers/teamMemberController";
+import { authenticate, authorize } from "../middleware/auth.middleware";
+import { validateTeamMember } from "../middleware/validate.middleware";
 
 const router = express.Router();
 
@@ -28,15 +30,16 @@ const router = express.Router();
  *           type: string
  *         status:
  *           type: string
- *           enum: [active, inactive]
  */
 
 /**
  * @swagger
  * /team-members:
  *   post:
- *     summary: Create a new team member
+ *     summary: Create a new team member (Admin only)
  *     tags: [Team Members]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -47,7 +50,7 @@ const router = express.Router();
  *       201:
  *         description: Created
  */
-router.post("/", teamMemberController.createTeamMember);
+router.post("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), validateTeamMember, teamMemberController.createTeamMember);
 
 /**
  * @swagger
@@ -55,6 +58,17 @@ router.post("/", teamMemberController.createTeamMember);
  *   get:
  *     summary: Get all team members
  *     tags: [Team Members]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of members per page
  *     responses:
  *       200:
  *         description: List of team members
@@ -83,8 +97,10 @@ router.get("/:id", teamMemberController.getTeamMemberById);
  * @swagger
  * /team-members/{id}:
  *   put:
- *     summary: Update team member
+ *     summary: Update team member (Admin only)
  *     tags: [Team Members]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -100,14 +116,16 @@ router.get("/:id", teamMemberController.getTeamMemberById);
  *       200:
  *         description: Updated
  */
-router.put("/:id", teamMemberController.updateTeamMember);
+router.put("/:id", authenticate, authorize(["ADMIN", "SUPERADMIN"]), teamMemberController.updateTeamMember);
 
 /**
  * @swagger
  * /team-members/{id}:
  *   delete:
- *     summary: Delete team member
+ *     summary: Delete team member (Admin only)
  *     tags: [Team Members]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -118,6 +136,6 @@ router.put("/:id", teamMemberController.updateTeamMember);
  *       200:
  *         description: Deleted
  */
-router.delete("/:id", teamMemberController.deleteTeamMember);
+router.delete("/:id", authenticate, authorize(["ADMIN", "SUPERADMIN"]), teamMemberController.deleteTeamMember);
 
 export default router;

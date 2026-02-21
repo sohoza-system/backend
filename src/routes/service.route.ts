@@ -1,5 +1,7 @@
 import express from "express";
 import * as serviceController from "../controllers/serviceController";
+import { authenticate, authorize } from "../middleware/auth.middleware";
+import { validateService } from "../middleware/validate.middleware";
 
 const router = express.Router();
 
@@ -34,8 +36,10 @@ const router = express.Router();
  * @swagger
  * /services:
  *   post:
- *     summary: Create a new service
+ *     summary: Create a new service (Admin only)
  *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -46,7 +50,7 @@ const router = express.Router();
  *       201:
  *         description: Created
  */
-router.post("/", serviceController.createService);
+router.post("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), validateService, serviceController.createService);
 
 /**
  * @swagger
@@ -54,6 +58,17 @@ router.post("/", serviceController.createService);
  *   get:
  *     summary: Get all services
  *     tags: [Services]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of services per page
  *     responses:
  *       200:
  *         description: List of services
@@ -82,8 +97,10 @@ router.get("/:id", serviceController.getServiceById);
  * @swagger
  * /services/{id}:
  *   put:
- *     summary: Update service
+ *     summary: Update service (Admin only)
  *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -99,14 +116,16 @@ router.get("/:id", serviceController.getServiceById);
  *       200:
  *         description: Updated
  */
-router.put("/:id", serviceController.updateService);
+router.put("/:id", authenticate, authorize(["ADMIN", "SUPERADMIN"]), serviceController.updateService);
 
 /**
  * @swagger
  * /services/{id}:
  *   delete:
- *     summary: Delete service
+ *     summary: Delete service (Admin only)
  *     tags: [Services]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -117,6 +136,6 @@ router.put("/:id", serviceController.updateService);
  *       200:
  *         description: Deleted
  */
-router.delete("/:id", serviceController.deleteService);
+router.delete("/:id", authenticate, authorize(["ADMIN", "SUPERADMIN"]), serviceController.deleteService);
 
 export default router;

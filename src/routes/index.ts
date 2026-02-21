@@ -1,12 +1,10 @@
 import express from 'express';
-import userRouter from './userRoute';
-import authRouter from './authRoute';
-
-import teamMemberRouter from './teamMemberRoute';
-import serviceRouter from './serviceRoute';
-import analyticsRouter from './analyticsRoute';
-import postRouter from './post.routes';
-import contactRouter from './contact.routes';
+import userRouter from './user.route';
+import teamMemberRouter from './teamMember.route';
+import serviceRouter from './service.route';
+import analyticsRouter from './analytics.route';
+import postRouter from './post.route';
+import contactRouter from './contact.route';
 
 import prisma from '../lib/prisma';
 
@@ -21,7 +19,6 @@ router.get('/models', (req, res) => {
     });
 });
 
-router.use('/auth', authRouter);
 router.use('/users', userRouter);
 router.use('/team-members', teamMemberRouter);
 router.use('/services', serviceRouter);

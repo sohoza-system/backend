@@ -1,7 +1,7 @@
 import express from 'express';
 import * as postController from '../controllers/postController';
 import { upload } from '../middleware/upload.middleware';
-import { validatePost } from '../middlewares/validate.middleware';
+import { validatePost } from '../middleware/validate.middleware';
 
 const router = express.Router();
 

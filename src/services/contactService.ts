@@ -20,14 +20,19 @@ export const createContactMessage = async (data: CreateContactInput) => {
     }
 };
 
-// Get all contact messages
-export const getAllContactMessages = async () => {
+// Get all contact messages with pagination
+export const getAllContactMessages = async (skip: number = 0, take: number = 10) => {
     try {
-        const messages = await prisma.contactMessage.findMany({
-            orderBy: { createdAt: 'desc' }
-        });
-        return messages;
-    } catch (error) {
+        const [messages, total] = await Promise.all([
+            prisma.contactMessage.findMany({
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' }
+            }),
+            prisma.contactMessage.count()
+        ]);
+        return { messages, total };
+    } catch (error: any) {
         console.error('ORIGINAL PRISMA ERROR in getAllContactMessages:', error);
         throw new Error(`Error fetching contact messages: ${error}`);
     }

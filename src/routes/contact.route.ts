@@ -1,5 +1,7 @@
 import express from 'express';
 import * as contactController from '../controllers/contactController';
+import { authenticate, authorize } from '../middleware/auth.middleware';
+import { validateContactMessage } from '../middleware/validate.middleware';
 
 const router = express.Router();
 
@@ -42,18 +44,31 @@ const router = express.Router();
  *       201:
  *         description: Sent
  */
-router.post('/', contactController.createContactMessage);
+router.post('/', validateContactMessage, contactController.createContactMessage);
 
 /**
  * @swagger
  * /contact:
  *   get:
- *     summary: Get all contact messages
+ *     summary: Get all contact messages (Admin only)
  *     tags: [Contact]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of messages per page
  *     responses:
  *       200:
- *         description: List of messages
+ *         description: List of contact messages
  */
-router.get('/', contactController.getAllContactMessages);
+router.get('/', authenticate, authorize(["ADMIN", "SUPERADMIN"]), contactController.getAllContactMessages);
 
 export default router;

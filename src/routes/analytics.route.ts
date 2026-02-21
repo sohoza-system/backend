@@ -1,5 +1,6 @@
 import express from "express";
 import * as analyticsController from "../controllers/analyticsController";
+import { authenticate, authorize } from "../middleware/auth.middleware";
 
 const router = express.Router();
 
@@ -9,11 +10,13 @@ const router = express.Router();
  *   get:
  *     summary: Get dashboard analytics data
  *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Dashboard statistics
  */
-router.get("/dashboard", analyticsController.getDashboardAnalytics);
+router.get("/dashboard", authenticate, authorize(["ADMIN", "SUPERADMIN"]), analyticsController.getDashboardAnalytics);
 
 /**
  * @swagger
@@ -21,11 +24,13 @@ router.get("/dashboard", analyticsController.getDashboardAnalytics);
  *   get:
  *     summary: Get general system analytics
  *     tags: [Analytics]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: General analytics data
  */
-router.get("/general", analyticsController.getGeneralAnalytics);
+router.get("/general", authenticate, authorize(["ADMIN", "SUPERADMIN"]), analyticsController.getGeneralAnalytics);
 router.get("/debug-tables", async (req, res) => {
     try {
         const prisma = (await import("../lib/prisma")).default;

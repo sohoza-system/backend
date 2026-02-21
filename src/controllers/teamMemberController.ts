@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import * as teamMemberService from "../services/teamMemberService";
 
+import { getPagination } from "../utils/pagination";
+
 // Create a new team member
 export const createTeamMember = async (req: Request, res: Response) => {
     try {
@@ -15,8 +17,15 @@ export const createTeamMember = async (req: Request, res: Response) => {
 // Get all team members
 export const getAllTeamMembers = async (req: Request, res: Response) => {
     try {
-        const members = await teamMemberService.getAllTeamMembers();
-        res.status(200).json({ message: "Team members fetched successfully", members });
+        const { skip, take } = getPagination(req.query);
+        const { members, total } = await teamMemberService.getAllTeamMembers(skip, take);
+
+        res.status(200).json({
+            data: members,
+            total,
+            page: Number(req.query.page) || 1,
+            totalPages: Math.ceil(total / take)
+        });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }

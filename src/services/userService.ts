@@ -25,15 +25,23 @@ export const createUser = async (
   }
 };
 
-// Get all users
-export const getAllUsers = async () => {
+// Get all users with pagination
+export const getAllUsers = async (skip: number = 0, take: number = 10) => {
   try {
-    const users = await prisma.user.findMany({
-      where: {
-        deletedAt: null, // Exclude soft deleted users
-      },
-    });
-    return users;
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where: {
+          deletedAt: null, // Exclude soft deleted users
+        },
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.user.count({
+        where: { deletedAt: null }
+      })
+    ]);
+    return { users, total };
   } catch (error) {
     throw new Error(`Error fetching users: ${error}`);
   }

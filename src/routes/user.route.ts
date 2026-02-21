@@ -1,5 +1,6 @@
 import express from "express";
 import * as userController from "../controllers/userController";
+import * as authController from "../controllers/authController";
 import { authenticate, authorize } from "../middleware/auth.middleware";
 import { upload } from "../middleware/upload.middleware";
 
@@ -40,7 +41,49 @@ const router = express.Router();
  *           format: date-time
  */
 
-// router.post("/", userController.createUser); // Removed - handled in authRoute.ts
+/**
+ * @swagger
+ * /users/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth, Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/User'
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ */
+router.post("/register", userController.createUser);
+
+/**
+ * @swagger
+ * /users/login:
+ *   post:
+ *     summary: Login a user
+ *     tags: [Auth, Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ */
+router.post("/login", authController.login);
 
 
 /**
@@ -51,6 +94,17 @@ const router = express.Router();
  *     tags: [Users]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of users per page
  *     responses:
  *       200:
  *         description: List of all users

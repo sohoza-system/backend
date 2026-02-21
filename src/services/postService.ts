@@ -5,6 +5,7 @@ export interface CreatePostInput {
     description?: string;
     content: string;
     authorId: number;
+    imageUrl?: string | null;
 }
 
 export interface UpdatePostInput {
