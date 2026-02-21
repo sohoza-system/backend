@@ -1,14 +1,25 @@
 import express from 'express';
 import { prisma } from '../lib/prisma.js';
+import { getPagination } from '../utils/pagination.js';
+import { validatePost } from '../middlewares/validate.middleware.js';
+import multer from 'multer';
+import cloudinary from '../lib/cloudinary.js';
 
 const router = express.Router();
 
 //
 // GET all posts
 //
+
+
 router.get('/', async (req, res) => {
+  const { skip, take } = getPagination(req.query);
+
   try {
     const posts = await prisma.post.findMany({
+      skip,
+      take,
+      orderBy: { createdAt: 'desc' },
       include: {
         author: true,
         comments: true,
@@ -16,11 +27,20 @@ router.get('/', async (req, res) => {
       }
     });
 
-    res.json(posts);
+    const total = await prisma.post.count();
+
+res.json({
+  data: posts,
+  total,
+  page: Number(req.query.page) || 1,
+  totalPages: Math.ceil(total / take)
+});
+
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch posts' });
   }
 });
+
 
 //
 // GET single post
@@ -51,23 +71,31 @@ router.get('/:id', async (req, res) => {
 //
 // CREATE post
 //
-router.post('/', async (req, res) => {
-  const { title, description, content, authorId } = req.body;
 
-  try {
-    const newPost = await prisma.post.create({
-      data: {
-        title,
-        description,
-        content,
-        authorId
-      }
-    });
 
-    res.status(201).json(newPost);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to create post' });
+const upload = multer({ dest: 'uploads/' });
+
+router.post('/', validatePost, upload.single('image'), async (req, res) => {
+  const { title, content, authorId } = req.body;
+
+  let imageUrl: string | null = null;
+
+  if (req.file) {
+    const result = await cloudinary.uploader.upload(req.file.path);
+    imageUrl = result.secure_url;
   }
+
+  const post = await prisma.post.create({
+    data: {
+      title,
+      content,
+      authorId: Number(authorId),
+      imageUrl
+    }
+  });
+
+
+  res.json(post);
 });
 
 //
