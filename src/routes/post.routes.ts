@@ -1,5 +1,7 @@
 import express from 'express';
 import * as postController from '../controllers/postController';
+import { upload } from '../middleware/upload.middleware';
+import { validatePost } from '../middlewares/validate.middleware';
 
 const router = express.Router();
 
@@ -22,6 +24,8 @@ const router = express.Router();
  *           type: string
  *         content:
  *           type: string
+ *         imageUrl:
+ *           type: string
  *         published:
  *           type: boolean
  *         status:
@@ -34,8 +38,19 @@ const router = express.Router();
  * @swagger
  * /posts:
  *   get:
- *     summary: Get all posts
+ *     summary: Get all posts with pagination
  *     tags: [Posts]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of posts per page
  *     responses:
  *       200:
  *         description: List of posts
@@ -69,14 +84,24 @@ router.get('/:id', postController.getPostById);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
- *             $ref: '#/components/schemas/Post'
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *               content:
+ *                 type: string
+ *               authorId:
+ *                 type: integer
+ *               image:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: Created
  */
-router.post('/', postController.createPost);
+router.post('/', validatePost, upload.single('image'), postController.createPost);
 
 /**
  * @swagger
