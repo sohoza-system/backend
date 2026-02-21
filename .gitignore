@@ -1,31 +1,42 @@
+# Prisma
 
-# Generated Prisma client
+# Generated Prisma client (if custom output is used)
 /generated/prisma/
 
 # Dependencies
+
 node_modules/
 
-# Environment variables (secrets)
+# Environment Variables (Secrets)
+
 .env
 .env.local
 .env.development
 .env.test
 .env.production
 
-# Build output (TypeScript compiled files)
+# Build Output (TypeScript)
+
 dist/
 build/
 
 # Logs
+
 *.log
 npm-debug.log*
 yarn-debug.log*
 pnpm-debug.log*
 
-# OS files
+# Temporary Uploads (Multer local storage)
+
+uploads/
+
+# OS Files
+
 .DS_Store
 Thumbs.db
 
-# IDEs
+# IDE & Editor Settings
+
 .vscode/
 .idea/
