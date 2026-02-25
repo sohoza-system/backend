@@ -25,21 +25,25 @@ export const createUser = async (
   }
 };
 
-// Get all users with pagination
-export const getAllUsers = async (skip: number = 0, take: number = 10) => {
+// Get all users with pagination and search
+export const getAllUsers = async (skip: number = 0, take: number = 10, search?: string) => {
   try {
+    const where: any = {
+      deletedAt: null,
+      OR: search ? [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } }
+      ] : undefined
+    };
+
     const [users, total] = await Promise.all([
       prisma.user.findMany({
-        where: {
-          deletedAt: null, // Exclude soft deleted users
-        },
+        where,
         skip,
         take,
         orderBy: { createdAt: 'desc' }
       }),
-      prisma.user.count({
-        where: { deletedAt: null }
-      })
+      prisma.user.count({ where })
     ]);
     return { users, total };
   } catch (error) {

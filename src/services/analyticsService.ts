@@ -3,52 +3,63 @@ import prisma from "../lib/prisma";
 export const getDashboardAnalytics = async () => {
     const now = new Date();
     const last7Days = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const prev7DaysStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
     const last24Hours = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
     try {
-        // Weekly visitors (grouped by date)
-        // Note: For real charting, we'd want to aggregate by day.
-        // For now, returning total count in last 7 days.
-        const weeklyVisitors = await prisma.visit.count({
+        // Weekly visitors (Current 7 days)
+        const currentWeeklyVisitors = await prisma.visit.count({
+            where: {
+                createdAt: { gte: last7Days },
+            },
+        });
+
+        // Previous Weekly visitors (7-14 days ago)
+        const previousWeeklyVisitors = await prisma.visit.count({
             where: {
                 createdAt: {
-                    gte: last7Days,
+                    gte: prev7DaysStart,
+                    lt: last7Days
                 },
             },
         });
 
+        // Calculate Trend Percentage
+        let visitorTrend = 0;
+        if (previousWeeklyVisitors > 0) {
+            visitorTrend = ((currentWeeklyVisitors - previousWeeklyVisitors) / previousWeeklyVisitors) * 100;
+        } else if (currentWeeklyVisitors > 0) {
+            visitorTrend = 100;
+        }
+
         // Traffic sources breakdown
         const trafficSources = await prisma.visit.groupBy({
             by: ['source'],
-            _count: {
-                id: true,
-            },
+            _count: { id: true },
         });
 
         // Recent activity
         const recentActivity = await prisma.activity.findMany({
             take: 10,
-            orderBy: {
-                createdAt: 'desc',
-            },
+            orderBy: { createdAt: 'desc' },
         });
 
         // New post notifications (posts in last 24h)
         const newPosts = await prisma.post.findMany({
             where: {
                 status: "published",
-                createdAt: {
-                    gte: last24Hours,
-                },
+                createdAt: { gte: last24Hours },
             },
             take: 5,
-            orderBy: {
-                createdAt: 'desc',
-            },
+            orderBy: { createdAt: 'desc' },
         });
 
         return {
-            weeklyVisitors,
+            visitors: {
+                current: currentWeeklyVisitors,
+                previous: previousWeeklyVisitors,
+                trend: Number(visitorTrend.toFixed(2)), // e.g. 15.45 for 15.45% growth
+            },
             trafficSources,
             recentActivity,
             notifications: {

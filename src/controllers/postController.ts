@@ -30,7 +30,14 @@ export const createPost = async (req: Request, res: Response) => {
 export const getAllPosts = async (req: Request, res: Response) => {
     try {
         const { skip, take } = getPagination(req.query);
-        const { posts, total } = await postService.getAllPosts(skip, take);
+        const { search, category } = req.query;
+
+        const { posts, total } = await postService.getAllPosts(
+            skip,
+            take,
+            search as string,
+            category as string
+        );
 
         res.status(200).json({
             data: posts,
@@ -38,6 +45,18 @@ export const getAllPosts = async (req: Request, res: Response) => {
             page: Number(req.query.page) || 1,
             totalPages: Math.ceil(total / take)
         });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Get Related Posts (Recommendation)
+export const getRelatedPosts = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const limit = Number(req.query.limit) || 3;
+        const posts = await postService.getRelatedPosts(Number(id), limit);
+        res.status(200).json(posts);
     } catch (error: any) {
         res.status(500).json({ message: error.message });
     }
