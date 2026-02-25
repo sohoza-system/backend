@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import * as userService from "../services/userService";
 
+import { getPagination } from "../utils/pagination";
+
 // Create a new user
 export const createUser = async (req: Request, res: Response) => {
   try {
@@ -22,8 +24,17 @@ export const createUser = async (req: Request, res: Response) => {
 // Get all users
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const users = await userService.getAllUsers();
-    res.status(200).json({ message: "Users fetched successfully", users });
+    const { skip, take } = getPagination(req.query);
+    const { search } = req.query;
+
+    const { users, total } = await userService.getAllUsers(skip, take, search as string);
+
+    res.status(200).json({
+      data: users,
+      total,
+      page: Number(req.query.page) || 1,
+      totalPages: Math.ceil(total / take)
+    });
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }

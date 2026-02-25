@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -22,8 +21,13 @@ model User {
   deletedAt     DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  friends       User[]    @relation("UserFriends")
-  friendOf      User[]    @relation("UserFriends")
+
+  posts    Post[]
+  comments Comment[]
+  friends  User[]    @relation("UserFriends")
+  friendOf User[]    @relation("UserFriends")
+
+  @@map("user")
 }
 
 model TeamMember {
@@ -37,6 +41,8 @@ model TeamMember {
   socials   Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@map("teammember")
 }
 
 model Service {
@@ -48,15 +54,62 @@ model Service {
   status      String   @default("active")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@map("service")
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  title     String
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String? // optional short preview
+  content     String
+  imageUrl    String?
+  published   Boolean?  @default(false)
+  status      String    @default("published")
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+
+  authorId Int
+  author   User @relation(fields: [authorId], references: [id])
+
+  comments   Comment[]
+  categories PostCategory[]
+
+  @@map("post")
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
   content   String
-  status    String   @default("published")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime? @default(now())
+
+  authorId Int
+  postId   Int
+
+  author User @relation(fields: [authorId], references: [id])
+  post   Post @relation(fields: [postId], references: [id])
+
+  @@map("comment")
+}
+
+model Category {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  posts PostCategory[]
+
+  @@map("category")
+}
+
+model PostCategory {
+  postId     Int
+  categoryId Int
+
+  post     Post     @relation(fields: [postId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([postId, categoryId])
+  @@map("postcategory")
 }
 
 model Activity {
@@ -64,6 +117,8 @@ model Activity {
   type        String
   description String
   createdAt   DateTime @default(now())
+
+  @@map("activity")
 }
 
 model Visit {
@@ -72,6 +127,19 @@ model Visit {
   deviceType String
   source     String
   createdAt  DateTime @default(now())
+
+  @@map("visit")
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  createdAt DateTime @default(now())
+
+  @@map("contactmessage")
 }
 
 enum Role {

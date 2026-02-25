@@ -28,15 +28,23 @@ export const createTeamMember = async (data: CreateTeamMemberInput) => {
     });
     return member;
   } catch (error) {
+    console.error('ORIGINAL PRISMA ERROR in createTeamMember:', error);
     throw new Error(`Error creating team member: ${error}`);
   }
 };
 
-// Get all team members
-export const getAllTeamMembers = async () => {
+// Get all team members with pagination
+export const getAllTeamMembers = async (skip: number = 0, take: number = 10) => {
   try {
-    const members = await prisma.teamMember.findMany();
-    return members;
+    const [members, total] = await Promise.all([
+      prisma.teamMember.findMany({
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.teamMember.count()
+    ]);
+    return { members, total };
   } catch (error) {
     throw new Error(`Error fetching team members: ${error}`);
   }

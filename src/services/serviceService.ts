@@ -19,20 +19,33 @@ export interface UpdateServiceInput {
 // Create a new service
 export const createService = async (data: CreateServiceInput) => {
     try {
+        // Handle features if it's sent as a string (comma-separated)
+        if (typeof data.features === 'string') {
+            data.features = (data.features as string).split(',').map(f => f.trim());
+        }
+
         const service = await prisma.service.create({
             data,
         });
         return service;
     } catch (error) {
+        console.error('ORIGINAL PRISMA ERROR in createService:', error);
         throw new Error(`Error creating service: ${error}`);
     }
 };
 
-// Get all services
-export const getAllServices = async () => {
+// Get all services with pagination
+export const getAllServices = async (skip: number = 0, take: number = 10) => {
     try {
-        const services = await prisma.service.findMany();
-        return services;
+        const [services, total] = await Promise.all([
+            prisma.service.findMany({
+                skip,
+                take,
+                orderBy: { createdAt: 'desc' }
+            }),
+            prisma.service.count()
+        ]);
+        return { services, total };
     } catch (error) {
         throw new Error(`Error fetching services: ${error}`);
     }
