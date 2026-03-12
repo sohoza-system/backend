@@ -68,11 +68,14 @@ export const validateToken = (token: string) => {
     }
 }
 
+import { sendPasswordResetEmail } from "./emailService";
+import crypto from "crypto";
+
 export const forgotPassword = async (email: string) => {
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw new Error("User not found");
 
-    const token = require('crypto').randomBytes(20).toString('hex');
+    const token = crypto.randomBytes(20).toString('hex');
     const expires = new Date(Date.now() + 3600000); // 1 hour
 
     await prisma.user.update({
@@ -83,7 +86,10 @@ export const forgotPassword = async (email: string) => {
         }
     });
 
-    return token; // In production, send this via email
+    // Send the real password reset email
+    await sendPasswordResetEmail(email, token);
+
+    return token;
 };
 
 export const resetPassword = async (token: string, newPassword: string) => {

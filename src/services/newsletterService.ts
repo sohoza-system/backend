@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma";
 import crypto from "crypto";
+import { sendVerificationEmail, sendEmail } from "./emailService";
 
 export const subscribe = async (email: string) => {
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -21,8 +22,8 @@ export const subscribe = async (email: string) => {
         }
     });
 
-    // In a real scenario, you would call an email service here
-    console.log(`[NEWSLETTER] Verification email would be sent to ${email} with token ${verificationToken}`);
+    // Send the real verification email
+    await sendVerificationEmail(email, verificationToken);
     
     return subscription;
 };
@@ -71,4 +72,31 @@ export const getAllSubscribers = async (skip: number = 0, take: number = 50) => 
         prisma.newsletterSubscription.count()
     ]);
     return { subscribers, total };
+};
+
+export const broadcastNewsletter = async (subject: string, content: string) => {
+    const verifiedSubscribers = await prisma.newsletterSubscription.findMany({
+        where: { isVerified: true, isActive: true }
+    });
+
+    const sendPromises = verifiedSubscribers.map(sub => {
+        const html = `
+            <div style="font-family: sans-serif; line-height: 1.6;">
+                ${content}
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="font-size: 12px; color: #666;">
+                    You are receiving this because you subscribed to Sohoza System. 
+                    <a href="${process.env.API_BASE_URL}/api/newsletter/unsubscribe?token=${sub.unsubscribeToken}">Unsubscribe here</a>
+                </p>
+            </div>
+        `;
+        return sendEmail(sub.email, subject, html);
+    });
+
+    const results = await Promise.all(sendPromises);
+    return {
+        total: verifiedSubscribers.length,
+        sent: results.filter(r => r !== null).length,
+        failed: results.filter(r => r === null).length
+    };
 };

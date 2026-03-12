@@ -60,3 +60,19 @@ export const getAllSubscribers = async (req: Request, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 };
+export const broadcast = async (req: Request, res: Response) => {
+    try {
+        const { subject, content } = req.body;
+        if (!subject || !content) {
+            return res.status(400).json({ message: "Subject and content are required" });
+        }
+
+        const results = await newsletterService.broadcastNewsletter(subject, content);
+        res.status(200).json({ 
+            message: "Newsletter broadcast completed",
+            results 
+        });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

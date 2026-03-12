@@ -3,6 +3,8 @@ import * as userController from "../controllers/userController";
 import * as authController from "../controllers/authController";
 import { authenticate, authorize } from "../middleware/auth.middleware";
 import { upload } from "../middleware/upload.middleware";
+import { validate } from "../middleware/validate.middleware";
+import { loginSchema, registerSchema } from "../validations/schemas";
 
 const router = express.Router();
 
@@ -57,7 +59,7 @@ const router = express.Router();
  *       201:
  *         description: User registered successfully
  */
-router.post("/register", userController.createUser);
+router.post("/register", validate(registerSchema), userController.createUser);
 
 /**
  * @swagger
@@ -83,7 +85,7 @@ router.post("/register", userController.createUser);
  *       200:
  *         description: Login successful
  */
-router.post("/login", authController.login);
+router.post("/login", validate(loginSchema), authController.login);
 
 /**
  * @swagger

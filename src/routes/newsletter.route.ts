@@ -1,6 +1,8 @@
 import express from "express";
 import * as newsletterController from "../controllers/newsletterController";
 import { authenticate, authorize } from "../middleware/auth.middleware";
+import { validate } from "../middleware/validate.middleware";
+import { subscribeSchema } from "../validations/schemas";
 
 const router = express.Router();
 
@@ -11,7 +13,7 @@ const router = express.Router();
  *     summary: Subscribe to newsletter (initiates double opt-in)
  *     tags: [Newsletter]
  */
-router.post("/subscribe", newsletterController.subscribe);
+router.post("/subscribe", validate(subscribeSchema), newsletterController.subscribe);
 
 /**
  * @swagger
@@ -41,5 +43,16 @@ router.get("/unsubscribe", newsletterController.unsubscribe);
  *       - bearerAuth: []
  */
 router.get("/subscribers", authenticate, authorize(["ADMIN", "SUPERADMIN"]), newsletterController.getAllSubscribers);
+
+/**
+ * @swagger
+ * /newsletter/broadcast:
+ *   post:
+ *     summary: Send newsletter to all verified subscribers (Admin only)
+ *     tags: [Newsletter]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post("/broadcast", authenticate, authorize(["ADMIN", "SUPERADMIN"]), newsletterController.broadcast);
 
 export default router;
