@@ -1,6 +1,6 @@
 import prisma from "../lib/prisma";
 import crypto from "crypto";
-import { sendVerificationEmail, sendEmail } from "./emailService";
+import { sendVerificationEmail, sendEmail, sendNewsletterConfirmation } from "./emailService";
 
 export const subscribe = async (email: string) => {
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -37,7 +37,7 @@ export const verifySubscription = async (token: string) => {
         throw new Error("Invalid or expired verification token");
     }
 
-    return await prisma.newsletterSubscription.update({
+    const updated = await prisma.newsletterSubscription.update({
         where: { id: subscription.id },
         data: {
             isVerified: true,
@@ -45,6 +45,13 @@ export const verifySubscription = async (token: string) => {
             verificationToken: null
         }
     });
+
+    // Send the "You're subscribed" confirmation email
+    if (updated.unsubscribeToken) {
+        await sendNewsletterConfirmation(updated.email, updated.unsubscribeToken);
+    }
+
+    return updated;
 };
 
 export const unsubscribeByToken = async (token: string) => {
@@ -79,7 +86,7 @@ export const broadcastNewsletter = async (subject: string, content: string) => {
         where: { isVerified: true, isActive: true }
     });
 
-    const sendPromises = verifiedSubscribers.map(sub => {
+    const sendPromises = verifiedSubscribers.map((sub: any) => {
         const html = `
             <div style="font-family: sans-serif; line-height: 1.6;">
                 ${content}
@@ -96,7 +103,7 @@ export const broadcastNewsletter = async (subject: string, content: string) => {
     const results = await Promise.all(sendPromises);
     return {
         total: verifiedSubscribers.length,
-        sent: results.filter(r => r !== null).length,
-        failed: results.filter(r => r === null).length
+        sent: results.filter((r: any) => r !== null).length,
+        failed: results.filter((r: any) => r === null).length
     };
 };

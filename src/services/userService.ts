@@ -1,5 +1,6 @@
 import prisma from "../lib/prisma";
 import bcrypt from "bcryptjs";
+import { sendWelcomeEmail, sendPasswordChangedNotification } from "./emailService";
 
 type Role = "USER" | "ADMIN" | "SUPERADMIN";
 
@@ -20,66 +21,68 @@ export const createUser = async (
       },
     });
     return user;
-  } catch (error) {
+  } catch (error: any) {
+    console.error("Error in createUser:", error);
+    throw error;
+  }
+};
 
-    // Get all users with pagination and search
-    export const getAllUsers = async (skip: number = 0, take: number = 10, search?: string) => {
-      try {
-        const where: any = {
-          deletedAt: null,
-          OR: search ? [
-            { name: { contains: search, mode: 'insensitive' } },
-            { email: { contains: search, mode: 'insensitive' } }
-          ] : undefined
-        };
+// Get all users with pagination and search
+export const getAllUsers = async (skip: number = 0, take: number = 10, search?: string) => {
+  try {
+    const where: any = {
+      deletedAt: null,
+      OR: search ? [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } }
+      ] : undefined
+    };
 
-        const [users, total] = await Promise.all([
-          prisma.user.findMany({
-            where,
-            skip,
-            take,
-            orderBy: { createdAt: 'desc' }
-          }),
-          prisma.user.count({ where })
-        ]);
-        return { users, total };
-      } catch (error) {
-        console.error
-      }
+    const [users, total] = await Promise.all([
+      prisma.user.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.user.count({ where })
+    ]);
+    return { users, total };
+  } catch (error: any) {
+    console.error("Error in getAllUsers:", error);
+    throw error;
+  }
+};
 
-      export const getU
-      const user = await prisma.user.findUnique({
-        where: { id },
-      });
-      if (!user) {
-        throw new Error("User not found");
-      }
-      return user;
-    } catch (error) {
-      console.error("Error in getUserById:", error);
-      throw error;
+export const getUserById = async (id: number) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+    });
+    if (!user) {
+      throw new Error("User not found");
+    }
+    return user;
+  } catch (error: any) {
+    console.error("Error in getUserById:", error);
+    throw error;
+  }
+};
 
+export const getUserByEmail = async (email: string) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+    return user;
+  } catch (error: any) {
+    console.error("Error in getUserByEmail:", error);
+    throw error;
+  }
+};
 
-Gey const getUserByEmail = async (email: string) => {
-        try {
-          rsuwhere: { email },
-        });
-        netch(error) {
-          console.error("Error in getUserByEmail:", error);
-          throw error;
-        }
-
-        // Update user
-        export const upda
-        data: {
-          email ?: string;
-          name ?: string
-          isActive ?: boolean;
-          emailVerified ?: boolean;
-          phone ?: strin
-          bio ?: string;
-        }
-) => {
+// Update user
+export const updateUser = async (id: number, data: any) => {
   try {
     const user = await prisma.user.update({
       where: { id },
@@ -89,79 +92,119 @@ Gey const getUserByEmail = async (email: string) => {
       },
     });
     return user;
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in updateUser:", error);
     throw error;
   }
 };
-pdate last login
+
+// Update last login
 export const updateLastLogin = async (id: number) => {
   try {
-    const user = await prisma.user.update({
+    return await prisma.user.update({
+      where: { id },
       data: {
         lastLogin: new Date(),
       },
     });
-    catch (error) {
-      console.error("Error in updateLastLogin:", error);
-      throw error;
-    }
-  };
- Seert const softDeleteUser = async (id: number) => {
-    try {
-      const user = await prisma.user.update({
-        where: { id },
-        data: {
-          ee
-        },
-      });
-      return user;
-    } catch (error) {
-      console.error("Error in softDeleteUser:", error);
-      o
-    };
+  } catch (error: any) {
+    console.error("Error in updateLastLogin:", error);
+    throw error;
+  }
+};
 
-    // Hard delete us m
-    try {
-   r  where: { id },
+export const softDeleteUser = async (id: number) => {
+  try {
+    return await prisma.user.update({
+      where: { id },
+      data: {
+        deletedAt: new Date(),
+        isActive: false
+      },
     });
-    return user;
-  } catch (error)e"
-  throw error;
-}
+  } catch (error: any) {
+    console.error("Error in softDeleteUser:", error);
+    throw error;
+  }
+};
+
+export const hardDeleteUser = async (id: number) => {
+  try {
+    return await prisma.user.delete({
+      where: { id },
+    });
+  } catch (error: any) {
+    console.error("Error in hardDeleteUser:", error);
+    throw error;
+  }
 };
 
 // Get users by role
-export const getUi{
-  where: {
-    role,
-    deletedAt: null,
-  },
-});
-return users;s"
-throw error;
+export const getUsersByRole = async (role: Role) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        role,
+        deletedAt: null,
+      },
+    });
+    return users;
+  } catch (error: any) {
+    console.error("Error in getUsersByRole:", error);
+    throw error;
   }
 };
 
 export const changePassword = async (id: number, currentPassword: string, newPassword: string) => {
   try {
-    o
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) throw new Error("User not found");
+
     const isMatch = await bcrypt.compare(currentPassword, user.password);
     if (!isMatch) throw new Error("Incorrect current password");
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    return await prisma.user.update({
-      eei
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword }
     });
-  ce    throw error;
 
-    export const verifyEmail = async (token: string) => {
-: token }
-
-return await prisma.user.update({
-  eei
-}          emailVerified: true,
-  e
-        });
-    cr nrEerror;
+    // Send security notification
+    if (updated.email) {
+        await sendPasswordChangedNotification(updated.email);
     }
+
+    return updated;
+  } catch (error: any) {
+    console.error("Error in changePassword:", error);
+    throw error;
+  }
+};
+
+export const verifyEmail = async (token: string) => {
+  try {
+    const user = await prisma.user.findFirst({
+        where: { emailVerifyToken: token }
+    });
+
+    if (!user) throw new Error("Invalid verification token");
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerifyToken: null
+      }
+    });
+
+    // Send Welcome Email
+    if (updatedUser.email) {
+        await sendWelcomeEmail(updatedUser.email, updatedUser.name || 'New User');
+    }
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error("Error in verifyEmail:", error);
+    throw error;
+  }
+};

@@ -1,4 +1,5 @@
 import prisma from "../lib/prisma";
+import { sendContactReceipt } from "./emailService";
 
 export interface CreateContactInput {
     name: string;
@@ -13,6 +14,10 @@ export const createContactMessage = async (data: CreateContactInput) => {
         const newMessage = await prisma.contactMessage.create({
             data
         });
+
+        // Send automated receipt
+        await sendContactReceipt(data.email, data.name, data.subject || 'Contact Inquiry');
+
         return newMessage;
     } catch (error) {
         console.error('ORIGINAL PRISMA ERROR in createContactMessage:', error);
