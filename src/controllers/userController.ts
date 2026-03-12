@@ -128,3 +128,24 @@ export const hardDeleteUser = async (req: Request, res: Response) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+export const changePassword = async (req: Request, res: Response) => {
+    try {
+        const userId = (req as any).user.id;
+        const { currentPassword, newPassword } = req.body;
+        await userService.changePassword(userId, currentPassword, newPassword);
+        res.json({ message: "Password changed successfully" });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};
+
+export const verifyEmail = async (req: Request, res: Response) => {
+    try {
+        const { token } = req.params;
+        await userService.verifyEmail(token);
+        res.json({ message: "Email verified successfully" });
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
+    }
+};

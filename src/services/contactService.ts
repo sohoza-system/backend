@@ -37,3 +37,18 @@ export const getAllContactMessages = async (skip: number = 0, take: number = 10)
         throw new Error(`Error fetching contact messages: ${error}`);
     }
 };
+
+export const updateContactStatus = async (id: number, status: string) => {
+    return await prisma.contactMessage.update({
+        where: { id },
+        data: { status }
+    });
+};
+
+export const bulkDeleteContactMessages = async (ids: number[]) => {
+    return await prisma.contactMessage.deleteMany({
+        where: {
+            id: { in: ids }
+        }
+    });
+};

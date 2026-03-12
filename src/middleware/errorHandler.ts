@@ -47,17 +47,15 @@ export const errorHandler = (
     }
 
     // Handle Validation Errors (from our middleware)
-    if (err.status === 400 || err.message?.includes('required')) {
+    if (err.status === 400) {
         return res.status(400).json({
             error: 'Bad Request',
             message: err.message
         });
     }
 
-    // Default Error
+    // Default to 500 Internal Server Error
     const status = err.status || 500;
-    const message = err.message || 'Internal Server Error';
-
     res.status(status).json({
         status: 'error',
         message: process.env.NODE_ENV === 'production' && status === 500

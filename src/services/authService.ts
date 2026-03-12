@@ -21,10 +21,43 @@ export const login = async (email: string, password: string) => {
     const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         JWT_SECRET,
-        { expiresIn: "10h" } // Token expires in 10 hours
+        { expiresIn: "10h" } // Main token
     );
 
-    return { user, token };
+    const refreshToken = jwt.sign(
+        { id: user.id },
+        JWT_SECRET,
+        { expiresIn: "7d" } // Refresh token
+    );
+
+    await prisma.refreshToken.create({
+        data: {
+            token: refreshToken,
+            userId: user.id,
+            expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        }
+    });
+
+    return { user, token, refreshToken };
+};
+
+export const refreshAccessToken = async (token: string) => {
+    const storedToken = await prisma.refreshToken.findUnique({
+        where: { token },
+        include: { user: true }
+    });
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+        throw new Error("Invalid or expired refresh token");
+    }
+
+    const newToken = jwt.sign(
+        { id: storedToken.user.id, email: storedToken.user.email, role: storedToken.user.role },
+        JWT_SECRET,
+        { expiresIn: "10h" }
+    );
+
+    return { token: newToken };
 };
 
 export const validateToken = (token: string) => {
@@ -34,3 +67,45 @@ export const validateToken = (token: string) => {
         return null;
     }
 }
+
+export const forgotPassword = async (email: string) => {
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) throw new Error("User not found");
+
+    const token = require('crypto').randomBytes(20).toString('hex');
+    const expires = new Date(Date.now() + 3600000); // 1 hour
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            resetPasswordToken: token,
+            resetPasswordExpires: expires
+        }
+    });
+
+    return token; // In production, send this via email
+};
+
+export const resetPassword = async (token: string, newPassword: string) => {
+    const user = await prisma.user.findFirst({
+        where: {
+            resetPasswordToken: token,
+            resetPasswordExpires: { gte: new Date() }
+        }
+    });
+
+    if (!user) throw new Error("Invalid or expired reset token");
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+        where: { id: user.id },
+        data: {
+            password: hashedPassword,
+            resetPasswordToken: null,
+            resetPasswordExpires: null
+        }
+    });
+
+    return { message: "Password reset successful" };
+};

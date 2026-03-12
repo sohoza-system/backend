@@ -1,7 +1,6 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
 }
@@ -22,10 +21,18 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  posts    Post[]
-  comments Comment[]
-  friends  User[]    @relation("UserFriends")
-  friendOf User[]    @relation("UserFriends")
+  // Security
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  emailVerifyToken     String?
+
+  posts         Post[]
+  comments      Comment[]
+  postLikes     PostLike[]
+  refreshTokens RefreshToken[]
+  media         Media[]
+  friends       User[]         @relation("UserFriends")
+  friendOf      User[]         @relation("UserFriends")
 
   @@map("user")
 }
@@ -38,6 +45,7 @@ model TeamMember {
   bio       String?
   image     String?
   status    String   @default("active")
+  order     Int      @default(0)
   socials   Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -74,14 +82,29 @@ model Post {
 
   comments   Comment[]
   categories PostCategory[]
+  likes      PostLike[]
 
   @@map("post")
+}
+
+model PostLike {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@map("postlike")
 }
 
 model Comment {
   id        Int       @id @default(autoincrement())
   content   String
   createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 
   authorId Int
   postId   Int
@@ -114,6 +137,7 @@ model PostCategory {
 
 model Activity {
   id          Int      @id @default(autoincrement())
+  userId      Int?
   type        String
   description String
   createdAt   DateTime @default(now())
@@ -124,8 +148,9 @@ model Activity {
 model Visit {
   id         Int      @id @default(autoincrement())
   pagePath   String
-  deviceType String
-  source     String
+  deviceType String?
+  source     String?
+  ipAddress  String?
   createdAt  DateTime @default(now())
 
   @@map("visit")
@@ -137,9 +162,63 @@ model ContactMessage {
   email     String
   subject   String?
   message   String
+  status    String   @default("unread") // unread, read, replied
   createdAt DateTime @default(now())
 
   @@map("contactmessage")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("refreshtoken")
+}
+
+model Settings {
+  id              Int      @id @default(1)
+  siteName        String   @default("Sohoza System")
+  siteDescription String?
+  contactEmail    String?
+  contactPhone    String?
+  socialLinks     Json?
+  maintenanceMode Boolean  @default(false)
+  updatedAt       DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  url       String
+  publicId  String?
+  fileName  String?
+  fileType  String?
+  fileSize  Int?
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("media")
+}
+
+model NewsletterSubscription {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  isActive          Boolean   @default(true)
+  verificationToken String?
+  isVerified        Boolean   @default(false)
+  verifiedAt        DateTime?
+  unsubscribeToken  String?   @unique
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("newslettersubscription")
 }
 
 enum Role {

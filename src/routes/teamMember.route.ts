@@ -138,4 +138,15 @@ router.put("/:id", authenticate, authorize(["ADMIN", "SUPERADMIN"]), teamMemberC
  */
 router.delete("/:id", authenticate, authorize(["ADMIN", "SUPERADMIN"]), teamMemberController.deleteTeamMember);
 
+/**
+ * @swagger
+ * /team-members/reorder:
+ *   patch:
+ *     summary: Reorder team members (Admin only)
+ *     tags: [Team Members]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch("/reorder", authenticate, authorize(["ADMIN", "SUPERADMIN"]), teamMemberController.reorderTeamMembers);
+
 export default router;

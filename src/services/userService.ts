@@ -21,76 +21,64 @@ export const createUser = async (
     });
     return user;
   } catch (error) {
-    throw new Error(`Error creating user: ${error}`);
-  }
-};
 
-// Get all users with pagination and search
-export const getAllUsers = async (skip: number = 0, take: number = 10, search?: string) => {
-  try {
-    const where: any = {
-      deletedAt: null,
-      OR: search ? [
-        { name: { contains: search, mode: 'insensitive' } },
-        { email: { contains: search, mode: 'insensitive' } }
-      ] : undefined
-    };
+    // Get all users with pagination and search
+    export const getAllUsers = async (skip: number = 0, take: number = 10, search?: string) => {
+      try {
+        const where: any = {
+          deletedAt: null,
+          OR: search ? [
+            { name: { contains: search, mode: 'insensitive' } },
+            { email: { contains: search, mode: 'insensitive' } }
+          ] : undefined
+        };
 
-    const [users, total] = await Promise.all([
-      prisma.user.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { createdAt: 'desc' }
-      }),
-      prisma.user.count({ where })
-    ]);
-    return { users, total };
-  } catch (error) {
-    throw new Error(`Error fetching users: ${error}`);
-  }
-};
+        const [users, total] = await Promise.all([
+          prisma.user.findMany({
+            where,
+            skip,
+            take,
+            orderBy: { createdAt: 'desc' }
+          }),
+          prisma.user.count({ where })
+        ]);
+        return { users, total };
+      } catch (error) {
+        console.error
+      }
 
-// Get user by ID
-export const getUserById = async (id: number) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id },
-    });
-    if (!user) {
-      throw new Error("User not found");
-    }
-    return user;
-  } catch (error) {
-    throw new Error(`Error fetching user: ${error}`);
-  }
-};
+      export const getU
+      const user = await prisma.user.findUnique({
+        where: { id },
+      });
+      if (!user) {
+        throw new Error("User not found");
+      }
+      return user;
+    } catch (error) {
+      console.error("Error in getUserById:", error);
+      throw error;
 
-// Get user by email
-export const getUserByEmail = async (email: string) => {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { email },
-    });
-    return user;
-  } catch (error) {
-    throw new Error(`Error fetching user: ${error}`);
-  }
-};
 
-// Update user
-export const updateUser = async (
-  id: number,
-  data: {
-    email?: string;
-    name?: string;
-    role?: Role;
-    isActive?: boolean;
-    emailVerified?: boolean;
-    phone?: string;
-    profileImage?: string;
-    bio?: string;
-  }
+Gey const getUserByEmail = async (email: string) => {
+        try {
+          rsuwhere: { email },
+        });
+        netch(error) {
+          console.error("Error in getUserByEmail:", error);
+          throw error;
+        }
+
+        // Update user
+        export const upda
+        data: {
+          email ?: string;
+          name ?: string
+          isActive ?: boolean;
+          emailVerified ?: boolean;
+          phone ?: strin
+          bio ?: string;
+        }
 ) => {
   try {
     const user = await prisma.user.update({
@@ -102,63 +90,78 @@ export const updateUser = async (
     });
     return user;
   } catch (error) {
-    throw new Error(`Error updating user: ${error}`);
+    console.error("Error in updateUser:", error);
+    throw error;
   }
 };
-
-// Update last login
+pdate last login
 export const updateLastLogin = async (id: number) => {
   try {
     const user = await prisma.user.update({
-      where: { id },
       data: {
         lastLogin: new Date(),
       },
     });
-    return user;
-  } catch (error) {
-    throw new Error(`Error updating last login: ${error}`);
-  }
-};
+    catch (error) {
+      console.error("Error in updateLastLogin:", error);
+      throw error;
+    }
+  };
+ Seert const softDeleteUser = async (id: number) => {
+    try {
+      const user = await prisma.user.update({
+        where: { id },
+        data: {
+          ee
+        },
+      });
+      return user;
+    } catch (error) {
+      console.error("Error in softDeleteUser:", error);
+      o
+    };
 
-// Soft delete user
-export const softDeleteUser = async (id: number) => {
-  try {
-    const user = await prisma.user.update({
-      where: { id },
-      data: {
-        deletedAt: new Date(),
-      },
+    // Hard delete us m
+    try {
+   r  where: { id },
     });
     return user;
-  } catch (error) {
-    throw new Error(`Error deleting user: ${error}`);
-  }
-};
-
-// Hard delete user
-export const hardDeleteUser = async (id: number) => {
-  try {
-    const user = await prisma.user.delete({
-      where: { id },
-    });
-    return user;
-  } catch (error) {
-    throw new Error(`Error permanently deleting user: ${error}`);
-  }
+  } catch (error)e"
+  throw error;
+}
 };
 
 // Get users by role
-export const getUsersByRole = async (role: Role) => {
-  try {
-    const users = await prisma.user.findMany({
-      where: {
-        role,
-        deletedAt: null,
-      },
-    });
-    return users;
-  } catch (error) {
-    throw new Error(`Error fetching users by role: ${error}`);
+export const getUi{
+  where: {
+    role,
+    deletedAt: null,
+  },
+});
+return users;s"
+throw error;
   }
 };
+
+export const changePassword = async (id: number, currentPassword: string, newPassword: string) => {
+  try {
+    o
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) throw new Error("Incorrect current password");
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    return await prisma.user.update({
+      eei
+    });
+  ce    throw error;
+
+    export const verifyEmail = async (token: string) => {
+: token }
+
+return await prisma.user.update({
+  eei
+}          emailVerified: true,
+  e
+        });
+    cr nrEerror;
+    }

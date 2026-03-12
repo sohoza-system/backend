@@ -2,6 +2,7 @@ import express from 'express';
 import * as postController from '../controllers/postController';
 import { upload } from '../middleware/upload.middleware';
 import { validatePost } from '../middleware/validate.middleware';
+import { authenticate, authorize } from '../middleware/auth.middleware';
 
 const router = express.Router();
 
@@ -175,6 +176,39 @@ router.put('/:id', postController.updatePost);
  *       200:
  *         description: Deleted
  */
-router.delete('/:id', postController.deletePost);
+router.delete('/:id', authenticate, authorize(["ADMIN", "SUPERADMIN"]), postController.deletePost);
+
+/**
+ * @swagger
+ * /posts/{id}/status:
+ *   patch:
+ *     summary: Toggle post status (draft/published) (Admin only)
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/:id/status', authenticate, authorize(["ADMIN", "SUPERADMIN"]), postController.togglePostStatus);
+
+/**
+ * @swagger
+ * /posts/{id}/like:
+ *   post:
+ *     summary: Like a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/:id/like', authenticate, postController.likePost);
+
+/**
+ * @swagger
+ * /posts/{id}/like:
+ *   delete:
+ *     summary: Unlike a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.delete('/:id/like', authenticate, postController.unlikePost);
 
 export default router;

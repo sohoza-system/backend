@@ -64,3 +64,16 @@ export const deleteTeamMember = async (req: Request, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const reorderTeamMembers = async (req: Request, res: Response) => {
+    try {
+        const { orderedIds } = req.body;
+        if (!orderedIds || !Array.isArray(orderedIds)) {
+            return res.status(400).json({ message: "orderedIds array is required" });
+        }
+        await teamMemberService.reorderTeamMembers(orderedIds.map(Number));
+        res.json({ message: "Team members reordered successfully" });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

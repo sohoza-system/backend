@@ -85,6 +85,56 @@ router.post("/register", userController.createUser);
  */
 router.post("/login", authController.login);
 
+/**
+ * @swagger
+ * /users/refresh-token:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Auth, Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed
+ */
+router.post("/refresh-token", authController.refreshToken);
+
+/**
+ * @swagger
+ * /users/forgot-password:
+ *   post:
+ *     summary: Request password reset token
+ *     tags: [Auth, Users]
+ */
+router.post("/forgot-password", authController.forgotPassword);
+
+/**
+ * @swagger
+ * /users/reset-password:
+ *   post:
+ *     summary: Reset password using token
+ *     tags: [Auth, Users]
+ */
+router.post("/reset-password", authController.resetPassword);
+
+/**
+ * @swagger
+ * /users/verify-email/{token}:
+ *   get:
+ *     summary: Verify email address
+ *     tags: [Auth, Users]
+ */
+router.get("/verify-email/:token", userController.verifyEmail);
+
 
 /**
  * @swagger
@@ -115,6 +165,17 @@ router.post("/login", authController.login);
  *         description: List of all users
  */
 router.get("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), userController.getAllUsers);
+
+/**
+ * @swagger
+ * /users/change-password:
+ *   post:
+ *     summary: Change user password
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post("/change-password", authenticate, userController.changePassword);
 
 /**
  * @swagger

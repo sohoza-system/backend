@@ -71,4 +71,26 @@ router.post('/', validateContactMessage, contactController.createContactMessage)
  */
 router.get('/', authenticate, authorize(["ADMIN", "SUPERADMIN"]), contactController.getAllContactMessages);
 
+/**
+ * @swagger
+ * /contact/{id}/status:
+ *   patch:
+ *     summary: Update contact message status (Admin only)
+ *     tags: [Contact]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/:id/status', authenticate, authorize(["ADMIN", "SUPERADMIN"]), contactController.updateContactStatus);
+
+/**
+ * @swagger
+ * /contact/bulk-delete:
+ *   post:
+ *     summary: Bulk delete contact messages (Admin only)
+ *     tags: [Contact]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/bulk-delete', authenticate, authorize(["ADMIN", "SUPERADMIN"]), contactController.bulkDeleteContactMessages);
+
 export default router;

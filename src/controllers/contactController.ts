@@ -30,3 +30,27 @@ export const getAllContactMessages = async (req: Request, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+export const updateContactStatus = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const message = await contactService.updateContactStatus(Number(id), status);
+        res.json(message);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const bulkDeleteContactMessages = async (req: Request, res: Response) => {
+    try {
+        const { ids } = req.body;
+        if (!ids || !Array.isArray(ids)) {
+            return res.status(400).json({ message: "IDs array is required" });
+        }
+        await contactService.bulkDeleteContactMessages(ids.map(Number));
+        res.json({ message: "Messages deleted successfully" });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
