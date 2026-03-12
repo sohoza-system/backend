@@ -1,7 +1,8 @@
 import express from 'express';
 import * as postController from '../controllers/postController';
 import { upload } from '../middleware/upload.middleware';
-import { validatePost } from '../middleware/validate.middleware';
+import { validate } from '../middleware/validate.middleware';
+import { postSchema } from '../validations/schemas';
 import { authenticate, authorize } from '../middleware/auth.middleware';
 
 const router = express.Router();
@@ -135,7 +136,7 @@ router.get('/:id', postController.getPostById);
  *       201:
  *         description: Created
  */
-router.post('/', validatePost, upload.single('image'), postController.createPost);
+router.post('/', validate(postSchema), upload.single('image'), postController.createPost);
 
 /**
  * @swagger

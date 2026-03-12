@@ -1,7 +1,8 @@
 import express from 'express';
 import * as contactController from '../controllers/contactController';
 import { authenticate, authorize } from '../middleware/auth.middleware';
-import { validateContactMessage } from '../middleware/validate.middleware';
+import { validate } from '../middleware/validate.middleware';
+import { contactSchema } from '../validations/schemas';
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ const router = express.Router();
  *       201:
  *         description: Sent
  */
-router.post('/', validateContactMessage, contactController.createContactMessage);
+router.post('/', validate(contactSchema), contactController.createContactMessage);
 
 /**
  * @swagger

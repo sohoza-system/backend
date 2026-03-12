@@ -143,7 +143,7 @@ export const changePassword = async (req: Request, res: Response) => {
 export const verifyEmail = async (req: Request, res: Response) => {
     try {
         const { token } = req.params;
-        await userService.verifyEmail(token);
+        await userService.verifyEmail(token as string);
         res.json({ message: "Email verified successfully" });
     } catch (error: any) {
         res.status(400).json({ message: error.message });

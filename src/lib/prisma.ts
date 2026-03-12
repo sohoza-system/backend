@@ -12,7 +12,7 @@ const pool = new Pool({
     ? { rejectUnauthorized: true }
     : { rejectUnauthorized: false }
 });
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaPg(pool as any);
 
 const prismaClientSingleton = () => {
   return new PrismaClient({ adapter });

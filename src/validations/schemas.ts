@@ -38,3 +38,24 @@ export const postSchema = z.object({
     categories: z.array(z.number()).optional(),
   }),
 });
+
+export const serviceSchema = z.object({
+  body: z.object({
+    name: z.string().min(2, 'Service name is too short'),
+    description: z.string().min(10, 'Description is too short'),
+    icon: z.string().optional(),
+    features: z.array(z.string()).optional(),
+    status: z.enum(['active', 'inactive']).optional(),
+  }),
+});
+
+export const teamMemberSchema = z.object({
+  body: z.object({
+    name: z.string().min(2, 'Name is too short'),
+    role: z.string().min(2, 'Role is too short'),
+    email: z.string().email('Invalid email address'),
+    bio: z.string().optional(),
+    image: z.string().optional(),
+    status: z.string().optional(),
+  }),
+});
