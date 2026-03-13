@@ -3,23 +3,38 @@ import * as postService from "../services/postService";
 import { getPagination } from "../utils/pagination";
 import cloudinary from "../config/cloudinary";
 
+// ─── Helper: upload buffer to Cloudinary ─────────────────────
+const uploadToCloudinary = (buffer: Buffer, folder: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            { folder, resource_type: 'image' },
+            (error, result) => {
+                if (error || !result) return reject(error ?? new Error('Upload failed'));
+                resolve(result.secure_url);
+            }
+        );
+        stream.end(buffer);
+    });
+};
+
 // Create a new post
 export const createPost = async (req: Request, res: Response) => {
     try {
-        const { title, content, authorId } = req.body;
+        const { title, content, authorId, description, status, published } = req.body;
         let imageUrl: string | null = null;
 
-        if (req.file) {
-            const result = await cloudinary.uploader.upload(req.file.path);
-            imageUrl = result.secure_url;
+        if (req.file?.buffer) {
+            imageUrl = await uploadToCloudinary(req.file.buffer, 'sohoza-uploads');
         }
 
         const post = await postService.createPost({
             title,
             content,
+            description,
             authorId: Number(authorId),
-            imageUrl
+            imageUrl,
         });
+
         res.status(201).json({ message: "Post created successfully", post });
     } catch (error: any) {
         res.status(500).json({ message: error.message });
@@ -50,7 +65,7 @@ export const getAllPosts = async (req: Request, res: Response) => {
     }
 };
 
-// Get Related Posts (Recommendation)
+// Get Related Posts
 export const getRelatedPosts = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
@@ -78,6 +93,12 @@ export const updatePost = async (req: Request, res: Response) => {
     try {
         const { id } = req.params;
         const data = req.body;
+
+        // If a new image was uploaded, push it to Cloudinary
+        if (req.file?.buffer) {
+            data.imageUrl = await uploadToCloudinary(req.file.buffer, 'sohoza-uploads');
+        }
+
         const post = await postService.updatePost(Number(id), data);
         res.status(200).json({ message: "Post updated successfully", post });
     } catch (error: any) {

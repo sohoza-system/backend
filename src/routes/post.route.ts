@@ -134,7 +134,8 @@ router.get('/:id', postController.getPostById);
  *       201:
  *         description: Created
  */
-router.post('/', validatePost, upload.single('image'), postController.createPost);
+// ✅ upload.single('image') MUST come before validatePost so req.body is populated
+router.post('/', upload.single('image'), validatePost, postController.createPost);
 
 /**
  * @swagger
@@ -150,14 +151,15 @@ router.post('/', validatePost, upload.single('image'), postController.createPost
  *           type: integer
  *     requestBody:
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             $ref: '#/components/schemas/Post'
  *     responses:
  *       200:
  *         description: Updated
  */
-router.put('/:id', postController.updatePost);
+// ✅ added upload.single('image') so image updates work too
+router.put('/:id', upload.single('image'), postController.updatePost);
 
 /**
  * @swagger

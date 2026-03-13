@@ -1,13 +1,18 @@
-const multer = require('multer');
-const CloudinaryStorage = require('multer-storage-cloudinary');
-import cloudinary from '../config/cloudinary';
+import multer from 'multer';
 
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'sohoza-uploads', // The name of the folder in Cloudinary
-        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
-    } as any, // Type assertion needed due to incomplete types in the library
+// ✅ Use memory storage — upload buffer to Cloudinary manually in the controller
+// This works with cloudinary@2 without any adapter package
+const storage = multer.memoryStorage();
+
+export const upload = multer({
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+    fileFilter: (_req, file, cb) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (allowed.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only jpg, png, webp, gif images are allowed'));
+        }
+    },
 });
-
-export const upload = multer({ storage: storage });
