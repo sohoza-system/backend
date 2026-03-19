@@ -33,7 +33,7 @@ export const getGeneralAnalytics = async (req: Request, res: Response) => {
 
 export const trackVisit = async (req: Request, res: Response) => {
     try {
-        const { pagePath, source } = req.body;
+        const { pagePath, source, visitorId } = req.body;
         const deviceType = req.headers['user-agent']?.includes('Mobile') ? 'Mobile' : 'Desktop';
         const ipAddress = req.ip || req.get('x-forwarded-for');
 
@@ -41,7 +41,8 @@ export const trackVisit = async (req: Request, res: Response) => {
             pagePath,
             deviceType,
             source,
-            ipAddress: String(ipAddress)
+            ipAddress: String(ipAddress),
+            visitorId
         });
 
         res.status(204).send(); // No content for tracking

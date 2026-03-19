@@ -22,6 +22,9 @@ router.get("/", settingsController.getSettings);
  *     security:
  *       - bearerAuth: []
  */
-router.put("/", authenticate, authorize(["ADMIN,SUPERADMIN"]), settingsController.updateSettings);
+import { validate } from "../middleware/validate.middleware";
+import { settingsSchema } from "../validations/schemas";
+
+router.put("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), validate(settingsSchema), settingsController.updateSettings);
 
 export default router;

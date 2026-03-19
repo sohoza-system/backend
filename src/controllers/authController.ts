@@ -9,7 +9,12 @@ export const login = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Email and password are required" });
         }
 
-        const { user, token, refreshToken } = await authService.login(email, password);
+        const reqData = {
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent']
+        };
+
+        const { user, token, refreshToken } = await authService.login(email, password, reqData);
 
         res.status(200).json({
             message: "Login successful",
@@ -35,7 +40,12 @@ export const googleLogin = async (req: Request, res: Response) => {
             return res.status(400).json({ message: "Google token is required" });
         }
 
-        const { user, token, refreshToken } = await authService.googleLogin(idToken);
+        const reqData = {
+            ipAddress: req.ip,
+            userAgent: req.headers['user-agent']
+        };
+
+        const { user, token, refreshToken } = await authService.googleLogin(idToken, reqData);
 
         res.status(200).json({
             message: "Google login successful",

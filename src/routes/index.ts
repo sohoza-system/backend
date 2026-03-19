@@ -12,6 +12,9 @@ import activityRouter from './activity.route';
 import searchRouter from './search.route';
 import mediaRouter from './media.route';
 import newsletterRouter from './newsletter.route';
+import projectRouter from './project.route';
+import skillRouter from './skill.route';
+import projectLeadRouter from './projectLead.route';
 
 import prisma from '../lib/prisma';
 
@@ -39,5 +42,8 @@ router.use('/activities', activityRouter);
 router.use('/search', searchRouter);
 router.use('/media', mediaRouter);
 router.use('/newsletter', newsletterRouter);
+router.use('/projects', projectRouter);
+router.use('/skills', skillRouter);
+router.use('/leads', projectLeadRouter);
 
 export default router;

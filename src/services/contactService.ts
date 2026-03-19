@@ -6,6 +6,7 @@ export interface CreateContactInput {
     email: string;
     subject?: string;
     message: string;
+    visitorId?: string;
 }
 
 // Create a new contact message

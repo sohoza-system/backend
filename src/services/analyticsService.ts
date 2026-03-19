@@ -121,14 +121,15 @@ export const getGeneralAnalytics = async () => {
     }
 };
 
-export const trackVisit = async (data: { pagePath: string; deviceType?: string; source?: string; ipAddress?: string }) => {
+export const trackVisit = async (data: { pagePath: string; deviceType?: string; source?: string; ipAddress?: string; visitorId?: string }) => {
     try {
         return await prisma.visit.create({
             data: {
                 pagePath: data.pagePath,
                 deviceType: data.deviceType || 'unknown',
                 source: data.source || 'direct',
-                ipAddress: data.ipAddress || '0.0.0.0'
+                ipAddress: data.ipAddress || '0.0.0.0',
+                visitorId: data.visitorId
             }
         });
     } catch (error) {

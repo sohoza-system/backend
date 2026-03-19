@@ -7,7 +7,7 @@ import { ENV } from '../config/env';
 
 const googleClient = new OAuth2Client(ENV.GOOGLE_CLIENT_ID);
 
-export const login = async (email: string, password: string) => {
+export const login = async (email: string, password: string, reqData?: { ipAddress?: string, userAgent?: string }) => {
     const user = await prisma.user.findUnique({
         where: { email },
     });
@@ -42,10 +42,20 @@ export const login = async (email: string, password: string) => {
         }
     });
 
+    await prisma.activity.create({
+        data: {
+            userId: user.id,
+            type: "LOGIN",
+            description: "User logged in via email/password",
+            ipAddress: reqData?.ipAddress,
+            userAgent: reqData?.userAgent,
+        }
+    });
+
     return { user, token, refreshToken };
 };
 
-export const googleLogin = async (idToken: string) => {
+export const googleLogin = async (idToken: string, reqData?: { ipAddress?: string, userAgent?: string }) => {
     // 1. Verify Google token
     const ticket = await googleClient.verifyIdToken({
         idToken,
@@ -106,6 +116,16 @@ export const googleLogin = async (idToken: string) => {
             token: refreshToken,
             userId: user.id,
             expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+        }
+    });
+
+    await prisma.activity.create({
+        data: {
+            userId: user.id,
+            type: "LOGIN_GOOGLE",
+            description: "User logged in via Google Authentication",
+            ipAddress: reqData?.ipAddress,
+            userAgent: reqData?.userAgent,
         }
     });
 
