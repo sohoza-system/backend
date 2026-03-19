@@ -24,7 +24,7 @@ export const ENV = {
   MAIL_PORT: getEnv('MAIL_PORT', '587'),
   MAIL_USER: getEnv('MAIL_USER', ''),
   MAIL_PASS: getEnv('MAIL_PASS', ''),
-  MAIL_FROM: getEnv('MAIL_FROM', 'noreply@sohozasystem.com'),
+  MAIL_FROM: getEnv('MAIL_FROM', getEnv('MAIL_USER', 'noreply@sohozasystem.com')),
 
   GOOGLE_CLIENT_ID: getEnv('GOOGLE_CLIENT_ID', ''),
 };

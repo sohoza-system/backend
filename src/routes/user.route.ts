@@ -48,7 +48,7 @@ const router = express.Router();
  * /users/register:
  *   post:
  *     summary: Register a new user
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -66,7 +66,7 @@ router.post("/register", validate(registerSchema), userController.createUser);
  * /users/login:
  *   post:
  *     summary: Login a user
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -92,7 +92,7 @@ router.post("/login", validate(loginSchema), authController.login);
  * /users/google:
  *   post:
  *     summary: Login or Register with Google
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -118,7 +118,7 @@ router.post("/google", validate(googleAuthSchema), authController.googleLogin);
  * /users/refresh-token:
  *   post:
  *     summary: Refresh access token
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -141,7 +141,7 @@ router.post("/refresh-token", authController.refreshToken);
  * /users/forgot-password:
  *   post:
  *     summary: Request password reset token
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  */
 router.post("/forgot-password", authController.forgotPassword);
 
@@ -150,7 +150,7 @@ router.post("/forgot-password", authController.forgotPassword);
  * /users/reset-password:
  *   post:
  *     summary: Reset password using token
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  */
 router.post("/reset-password", authController.resetPassword);
 
@@ -159,7 +159,7 @@ router.post("/reset-password", authController.resetPassword);
  * /users/verify-email/{token}:
  *   get:
  *     summary: Verify email address
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  */
 router.get("/verify-email/:token", userController.verifyEmail);
 

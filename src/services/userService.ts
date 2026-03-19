@@ -1,6 +1,9 @@
 import prisma from "../lib/prisma";
 import bcrypt from "bcryptjs";
-import { sendWelcomeEmail, sendPasswordChangedNotification } from "./emailService";
+import crypto from 'crypto';
+import { sendWelcomeEmail, sendPasswordChangedNotification, sendEmail } from "./emailService";
+import * as templates from '../utils/emailTemplates';
+import { ENV } from '../config/env';
 
 type Role = "USER" | "ADMIN" | "SUPERADMIN";
 
@@ -12,14 +15,32 @@ export const createUser = async (
   role: Role = "USER"
 ) => {
   try {
+    // Generate a secure email verification token
+    const emailVerifyToken = crypto.randomBytes(32).toString('hex');
+
     const user = await prisma.user.create({
       data: {
         email,
         name,
         password: await bcrypt.hash(password, 10),
         role,
+        emailVerifyToken,
+        emailVerified: false,
       },
     });
+
+    // Send the verification email
+    const verifyUrl = `${ENV.API_BASE_URL}/api/users/verify-email/${emailVerifyToken}`;
+    const emailContent = `
+      <h2>Verify Your Email Address</h2>
+      <p>Hi ${name || 'there'},</p>
+      <p>Thanks for signing up to Sohoza System! Please click the button below to verify your email address and activate your account.</p>
+      <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#6c63ff;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">Verify My Email</a>
+      <p style="margin-top:16px;color:#888;">If you didn't create this account, you can safely ignore this email.</p>
+      <p style="color:#888;font-size:12px;">Link expires in 24 hours.</p>
+    `;
+    await sendEmail(email, '✅ Verify Your Sohoza Account', templates.baseLayout(emailContent));
+
     return user;
   } catch (error: any) {
     console.error("Error in createUser:", error);
