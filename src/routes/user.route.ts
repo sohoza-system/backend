@@ -4,7 +4,7 @@ import * as authController from "../controllers/authController";
 import { authenticate, authorize } from "../middleware/auth.middleware";
 import { upload } from "../middleware/upload.middleware";
 import { validate } from "../middleware/validate.middleware";
-import { loginSchema, registerSchema } from "../validations/schemas";
+import { loginSchema, registerSchema, googleAuthSchema } from "../validations/schemas";
 
 const router = express.Router();
 
@@ -86,6 +86,32 @@ router.post("/register", validate(registerSchema), userController.createUser);
  *         description: Login successful
  */
 router.post("/login", validate(loginSchema), authController.login);
+
+/**
+ * @swagger
+ * /users/google:
+ *   post:
+ *     summary: Login or Register with Google
+ *     tags: [Auth, Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: ID Token from Google
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid Google token
+ */
+router.post("/google", validate(googleAuthSchema), authController.googleLogin);
 
 /**
  * @swagger

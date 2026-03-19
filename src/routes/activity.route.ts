@@ -24,6 +24,6 @@ router.get("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), activityContro
  *     security:
  *       - bearerAuth: []
  */
-router.get("/user/:userId?", authenticate, activityController.getUserActivities);
+router.get(["/user/:userId", "/user"], authenticate, activityController.getUserActivities);
 
 export default router;

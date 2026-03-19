@@ -27,6 +27,33 @@ export const login = async (req: Request, res: Response) => {
     }
 };
 
+export const googleLogin = async (req: Request, res: Response) => {
+    try {
+        const { token: idToken } = req.body;
+
+        if (!idToken) {
+            return res.status(400).json({ message: "Google token is required" });
+        }
+
+        const { user, token, refreshToken } = await authService.googleLogin(idToken);
+
+        res.status(200).json({
+            message: "Google login successful",
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+                profileImage: user.profileImage
+            },
+            token,
+            refreshToken
+        });
+    } catch (error: any) {
+        res.status(401).json({ message: error.message });
+    }
+};
+
 export const refreshToken = async (req: Request, res: Response) => {
     try {
         const { token } = req.body;

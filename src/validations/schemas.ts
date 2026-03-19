@@ -7,6 +7,12 @@ export const loginSchema = z.object({
   }),
 });
 
+export const googleAuthSchema = z.object({
+  body: z.object({
+    token: z.string().min(1, 'Token is required'),
+  }),
+});
+
 export const registerSchema = z.object({
   body: z.object({
     email: z.string().email('Invalid email address'),
