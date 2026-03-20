@@ -1,7 +1,8 @@
 import express from "express";
 import * as serviceController from "../controllers/serviceController";
 import { authenticate, authorize } from "../middleware/auth.middleware";
-import { validateService } from "../middleware/validate.middleware";
+import { validate } from "../middleware/validate.middleware";
+import { serviceSchema } from "../validations/schemas";
 
 const router = express.Router();
 
@@ -50,7 +51,7 @@ const router = express.Router();
  *       201:
  *         description: Created
  */
-router.post("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), validateService, serviceController.createService);
+router.post("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), validate(serviceSchema), serviceController.createService);
 
 /**
  * @swagger

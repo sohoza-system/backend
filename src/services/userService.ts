@@ -1,5 +1,9 @@
 import prisma from "../lib/prisma";
 import bcrypt from "bcryptjs";
+import crypto from 'crypto';
+import { sendWelcomeEmail, sendPasswordChangedNotification, sendEmail } from "./emailService";
+import * as templates from '../utils/emailTemplates';
+import { ENV } from '../config/env';
 
 type Role = "USER" | "ADMIN" | "SUPERADMIN";
 
@@ -11,17 +15,36 @@ export const createUser = async (
   role: Role = "USER"
 ) => {
   try {
+    // Generate a secure email verification token
+    const emailVerifyToken = crypto.randomBytes(32).toString('hex');
+
     const user = await prisma.user.create({
       data: {
         email,
         name,
         password: await bcrypt.hash(password, 10),
         role,
+        emailVerifyToken,
+        emailVerified: false,
       },
     });
+
+    // Send the verification email
+    const verifyUrl = `${ENV.API_BASE_URL}/api/users/verify-email/${emailVerifyToken}`;
+    const emailContent = `
+      <h2>Verify Your Email Address</h2>
+      <p>Hi ${name || 'there'},</p>
+      <p>Thanks for signing up to Sohoza System! Please click the button below to verify your email address and activate your account.</p>
+      <a href="${verifyUrl}" style="display:inline-block;padding:12px 24px;background:#6c63ff;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">Verify My Email</a>
+      <p style="margin-top:16px;color:#888;">If you didn't create this account, you can safely ignore this email.</p>
+      <p style="color:#888;font-size:12px;">Link expires in 24 hours.</p>
+    `;
+    await sendEmail(email, '✅ Verify Your Sohoza Account', templates.baseLayout(emailContent));
+
     return user;
-  } catch (error) {
-    throw new Error(`Error creating user: ${error}`);
+  } catch (error: any) {
+    console.error("Error in createUser:", error);
+    throw error;
   }
 };
 
@@ -46,12 +69,12 @@ export const getAllUsers = async (skip: number = 0, take: number = 10, search?: 
       prisma.user.count({ where })
     ]);
     return { users, total };
-  } catch (error) {
-    throw new Error(`Error fetching users: ${error}`);
+  } catch (error: any) {
+    console.error("Error in getAllUsers:", error);
+    throw error;
   }
 };
 
-// Get user by ID
 export const getUserById = async (id: number) => {
   try {
     const user = await prisma.user.findUnique({
@@ -61,37 +84,26 @@ export const getUserById = async (id: number) => {
       throw new Error("User not found");
     }
     return user;
-  } catch (error) {
-    throw new Error(`Error fetching user: ${error}`);
+  } catch (error: any) {
+    console.error("Error in getUserById:", error);
+    throw error;
   }
 };
 
-// Get user by email
 export const getUserByEmail = async (email: string) => {
   try {
     const user = await prisma.user.findUnique({
       where: { email },
     });
     return user;
-  } catch (error) {
-    throw new Error(`Error fetching user: ${error}`);
+  } catch (error: any) {
+    console.error("Error in getUserByEmail:", error);
+    throw error;
   }
 };
 
 // Update user
-export const updateUser = async (
-  id: number,
-  data: {
-    email?: string;
-    name?: string;
-    role?: Role;
-    isActive?: boolean;
-    emailVerified?: boolean;
-    phone?: string;
-    profileImage?: string;
-    bio?: string;
-  }
-) => {
+export const updateUser = async (id: number, data: any) => {
   try {
     const user = await prisma.user.update({
       where: { id },
@@ -101,50 +113,50 @@ export const updateUser = async (
       },
     });
     return user;
-  } catch (error) {
-    throw new Error(`Error updating user: ${error}`);
+  } catch (error: any) {
+    console.error("Error in updateUser:", error);
+    throw error;
   }
 };
 
 // Update last login
 export const updateLastLogin = async (id: number) => {
   try {
-    const user = await prisma.user.update({
+    return await prisma.user.update({
       where: { id },
       data: {
         lastLogin: new Date(),
       },
     });
-    return user;
-  } catch (error) {
-    throw new Error(`Error updating last login: ${error}`);
+  } catch (error: any) {
+    console.error("Error in updateLastLogin:", error);
+    throw error;
   }
 };
 
-// Soft delete user
 export const softDeleteUser = async (id: number) => {
   try {
-    const user = await prisma.user.update({
+    return await prisma.user.update({
       where: { id },
       data: {
         deletedAt: new Date(),
+        isActive: false
       },
     });
-    return user;
-  } catch (error) {
-    throw new Error(`Error deleting user: ${error}`);
+  } catch (error: any) {
+    console.error("Error in softDeleteUser:", error);
+    throw error;
   }
 };
 
-// Hard delete user
 export const hardDeleteUser = async (id: number) => {
   try {
-    const user = await prisma.user.delete({
+    return await prisma.user.delete({
       where: { id },
     });
-    return user;
-  } catch (error) {
-    throw new Error(`Error permanently deleting user: ${error}`);
+  } catch (error: any) {
+    console.error("Error in hardDeleteUser:", error);
+    throw error;
   }
 };
 
@@ -158,7 +170,66 @@ export const getUsersByRole = async (role: Role) => {
       },
     });
     return users;
-  } catch (error) {
-    throw new Error(`Error fetching users by role: ${error}`);
+  } catch (error: any) {
+    console.error("Error in getUsersByRole:", error);
+    throw error;
+  }
+};
+
+export const changePassword = async (id: number, currentPassword: string, newPassword: string) => {
+  try {
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) throw new Error("User not found");
+
+    if (!user.password) {
+      throw new Error("You are logged in with a third-party provider and do not have a password set.");
+    }
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) throw new Error("Incorrect current password");
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updated = await prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword }
+    });
+
+    // Send security notification
+    if (updated.email) {
+        await sendPasswordChangedNotification(updated.email);
+    }
+
+    return updated;
+  } catch (error: any) {
+    console.error("Error in changePassword:", error);
+    throw error;
+  }
+};
+
+export const verifyEmail = async (token: string) => {
+  try {
+    const user = await prisma.user.findFirst({
+        where: { emailVerifyToken: token }
+    });
+
+    if (!user) throw new Error("Invalid verification token");
+
+    const updatedUser = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        emailVerified: true,
+        emailVerifyToken: null
+      }
+    });
+
+    // Send Welcome Email
+    if (updatedUser.email) {
+        await sendWelcomeEmail(updatedUser.email, updatedUser.name || 'New User');
+    }
+
+    return updatedUser;
+  } catch (error: any) {
+    console.error("Error in verifyEmail:", error);
+    throw error;
   }
 };

@@ -6,9 +6,13 @@ const connectionString = `${process.env.DATABASE_URL}`;
 
 const pool = new Pool({
   connectionString,
-  ssl: { rejectUnauthorized: false }
+  // IMPORTANT: In production, `rejectUnauthorized` should be `true`.
+  // `false` is only for development with self-signed certificates and is insecure.
+  ssl: process.env.NODE_ENV === "production"
+    ? { rejectUnauthorized: true }
+    : { rejectUnauthorized: false }
 });
-const adapter = new PrismaPg(pool);
+const adapter = new PrismaPg(pool as any);
 
 const prismaClientSingleton = () => {
   return new PrismaClient({ adapter });

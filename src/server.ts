@@ -9,8 +9,25 @@ import { specs } from "./config/swagger";
 import router from "./routes/index";
 import { errorHandler } from "./middleware/errorHandler";
 
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import hpp from "hpp";
+
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Security
+app.use(helmet());
+app.use(hpp());
+app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
+
+// Rate limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again after 15 minutes"
+});
+app.use("/api", limiter);
 
 // Observability
 if (process.env.NODE_ENV !== 'production') {
@@ -21,9 +38,8 @@ if (process.env.NODE_ENV !== 'production') {
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 
 // Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: process.env.CORS_ORIGIN || "*" }));
+app.use(express.json({ limit: "10kb" })); // Body limit
+app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
 // Routes
 app.use("/api", router);

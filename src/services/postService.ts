@@ -26,8 +26,8 @@ export const createPost = async (data: CreatePostInput) => {
         });
         return post;
     } catch (error) {
-        console.error('ORIGINAL PRISMA ERROR in createPost:', error);
-        throw new Error(`Error creating post: ${error}`);
+        console.error('Error in createPost:', error);
+        throw error; // Re-throw the original error to be handled by middleware
     }
 };
 
@@ -63,8 +63,8 @@ export const getAllPosts = async (skip: number = 0, take: number = 10, search?: 
         ]);
         return { posts, total };
     } catch (error: any) {
-        console.error("PRISMA ERROR in getAllPosts:", error);
-        throw new Error("Failed to fetch posts");
+        console.error("Error in getAllPosts:", error);
+        throw error;
     }
 };
 
@@ -111,7 +111,8 @@ export const getRelatedPosts = async (postId: number, limit: number = 3) => {
 
         return relatedPosts;
     } catch (error) {
-        throw new Error(`Error fetching related posts: ${error}`);
+        console.error("Error in getRelatedPosts:", error);
+        throw error;
     }
 };
 
@@ -130,7 +131,8 @@ export const getPostById = async (id: number) => {
         }
         return post;
     } catch (error) {
-        throw new Error(`Error fetching post: ${error}`);
+        console.error("Error in getPostById:", error);
+        throw error;
     }
 };
 
@@ -146,7 +148,53 @@ export const updatePost = async (id: number, data: UpdatePostInput) => {
         });
         return post;
     } catch (error) {
-        throw new Error(`Error updating post: ${error}`);
+        console.error("Error in updatePost:", error);
+        throw error;
+    }
+};
+
+// Toggle post status (draft/published)
+export const togglePostStatus = async (id: number, status: string) => {
+    try {
+        return await prisma.post.update({
+            where: { id },
+            data: { status, updatedAt: new Date() }
+        });
+    } catch (error) {
+        console.error("Error in togglePostStatus:", error);
+        throw error;
+    }
+};
+
+// Like a post
+export const likePost = async (postId: number, userId: number) => {
+    try {
+        return await prisma.postLike.create({
+            data: {
+                postId,
+                userId
+            }
+        });
+    } catch (error) {
+        console.error("Error in likePost:", error);
+        throw error;
+    }
+};
+
+// Unlike a post
+export const unlikePost = async (postId: number, userId: number) => {
+    try {
+        return await prisma.postLike.delete({
+            where: {
+                postId_userId: {
+                    postId,
+                    userId
+                }
+            }
+        });
+    } catch (error) {
+        console.error("Error in unlikePost:", error);
+        throw error;
     }
 };
 
@@ -158,6 +206,7 @@ export const deletePost = async (id: number) => {
         });
         return post;
     } catch (error) {
-        throw new Error(`Error deleting post: ${error}`);
+        console.error("Error in deletePost:", error);
+        throw error;
     }
 };

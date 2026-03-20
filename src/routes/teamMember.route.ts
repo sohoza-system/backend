@@ -1,7 +1,8 @@
 import express from "express";
 import * as teamMemberController from "../controllers/teamMemberController";
 import { authenticate, authorize } from "../middleware/auth.middleware";
-import { validateTeamMember } from "../middleware/validate.middleware";
+import { validate } from "../middleware/validate.middleware";
+import { teamMemberSchema } from "../validations/schemas";
 
 const router = express.Router();
 
@@ -50,7 +51,7 @@ const router = express.Router();
  *       201:
  *         description: Created
  */
-router.post("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), validateTeamMember, teamMemberController.createTeamMember);
+router.post("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), validate(teamMemberSchema), teamMemberController.createTeamMember);
 
 /**
  * @swagger
@@ -137,5 +138,16 @@ router.put("/:id", authenticate, authorize(["ADMIN", "SUPERADMIN"]), teamMemberC
  *         description: Deleted
  */
 router.delete("/:id", authenticate, authorize(["ADMIN", "SUPERADMIN"]), teamMemberController.deleteTeamMember);
+
+/**
+ * @swagger
+ * /team-members/reorder:
+ *   patch:
+ *     summary: Reorder team members (Admin only)
+ *     tags: [Team Members]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch("/reorder", authenticate, authorize(["ADMIN", "SUPERADMIN"]), teamMemberController.reorderTeamMembers);
 
 export default router;

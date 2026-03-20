@@ -1,7 +1,8 @@
 import express from 'express';
 import * as contactController from '../controllers/contactController';
 import { authenticate, authorize } from '../middleware/auth.middleware';
-import { validateContactMessage } from '../middleware/validate.middleware';
+import { validate } from '../middleware/validate.middleware';
+import { contactSchema } from '../validations/schemas';
 
 const router = express.Router();
 
@@ -44,7 +45,7 @@ const router = express.Router();
  *       201:
  *         description: Sent
  */
-router.post('/', validateContactMessage, contactController.createContactMessage);
+router.post('/', validate(contactSchema), contactController.createContactMessage);
 
 /**
  * @swagger
@@ -70,5 +71,27 @@ router.post('/', validateContactMessage, contactController.createContactMessage)
  *         description: List of contact messages
  */
 router.get('/', authenticate, authorize(["ADMIN", "SUPERADMIN"]), contactController.getAllContactMessages);
+
+/**
+ * @swagger
+ * /contact/{id}/status:
+ *   patch:
+ *     summary: Update contact message status (Admin only)
+ *     tags: [Contact]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.patch('/:id/status', authenticate, authorize(["ADMIN", "SUPERADMIN"]), contactController.updateContactStatus);
+
+/**
+ * @swagger
+ * /contact/bulk-delete:
+ *   post:
+ *     summary: Bulk delete contact messages (Admin only)
+ *     tags: [Contact]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post('/bulk-delete', authenticate, authorize(["ADMIN", "SUPERADMIN"]), contactController.bulkDeleteContactMessages);
 
 export default router;
