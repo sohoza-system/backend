@@ -120,3 +120,21 @@ export const getGeneralAnalytics = async () => {
         throw new Error(`Error fetching general analytics: ${error}`);
     }
 };
+
+export const trackVisit = async (data: { pagePath: string; deviceType?: string; source?: string; ipAddress?: string; visitorId?: string }) => {
+    try {
+        return await prisma.visit.create({
+            data: {
+                pagePath: data.pagePath,
+                deviceType: data.deviceType || 'unknown',
+                source: data.source || 'direct',
+                ipAddress: data.ipAddress || '0.0.0.0',
+                visitorId: data.visitorId
+            }
+        });
+    } catch (error) {
+        console.error("Error tracking visit:", error);
+        // We don't throw here to avoid crashing the frontend if tracking fails
+        return null;
+    }
+};

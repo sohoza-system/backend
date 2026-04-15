@@ -116,3 +116,37 @@ export const deletePost = async (req: Request, res: Response) => {
         res.status(500).json({ message: error.message });
     }
 };
+};
+
+export const togglePostStatus = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const post = await postService.togglePostStatus(Number(id), status);
+        res.json(post);
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const likePost = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = (req as any).user.id;
+        await postService.likePost(Number(id), userId);
+        res.json({ message: "Post liked" });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const unlikePost = async (req: Request, res: Response) => {
+    try {
+        const { id } = req.params;
+        const userId = (req as any).user.id;
+        await postService.unlikePost(Number(id), userId);
+        res.json({ message: "Post unliked" });
+    } catch (error: any) {
+        res.status(500).json({ message: error.message });
+    }
+};

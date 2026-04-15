@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { Prisma } from '@prisma/client';
+import { ZodError } from 'zod';
 
 export const errorHandler = (
     err: any,
@@ -13,14 +14,23 @@ export const errorHandler = (
     console.error(`Message: ${err.message}`);
 
     if (err.stack) {
-        // Only log first two lines of stack for brevity in console
         console.error(err.stack.split('\n').slice(0, 2).join('\n'));
     }
     console.error('-----------------');
 
+    // Handle Zod Validation Errors
+    if (err instanceof ZodError) {
+        return res.status(400).json({
+            error: 'Validation Error',
+            errors: err.issues.map((issue) => ({
+                path: issue.path.join('.'),
+                message: issue.message,
+            })),
+        });
+    }
+
     // Handle Prisma Specific Errors
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
-        // Unique constraint failed
         if (err.code === 'P2002') {
             const field = (err.meta?.target as string[])?.join(', ') || 'field';
             return res.status(400).json({
@@ -29,7 +39,6 @@ export const errorHandler = (
             });
         }
 
-        // Record not found
         if (err.code === 'P2025') {
             return res.status(404).json({
                 error: 'Not Found',
@@ -37,7 +46,6 @@ export const errorHandler = (
             });
         }
 
-        // Foreign key constraint failed
         if (err.code === 'P2003') {
             return res.status(400).json({
                 error: 'Constraint Error',
@@ -46,22 +54,12 @@ export const errorHandler = (
         }
     }
 
-    // Handle Validation Errors (from our middleware)
-    if (err.status === 400 || err.message?.includes('required')) {
-        return res.status(400).json({
-            error: 'Bad Request',
-            message: err.message
-        });
-    }
-
-    // Default Error
+    // Default to 500 Internal Server Error
     const status = err.status || 500;
-    const message = err.message || 'Internal Server Error';
-
     res.status(status).json({
-        status: 'error',
+        status: status === 500 ? 'error' : 'fail',
         message: process.env.NODE_ENV === 'production' && status === 500
             ? 'An unexpected error occurred'
-            : message
+            : err.message
     });
 };

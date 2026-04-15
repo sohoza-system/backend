@@ -92,3 +92,18 @@ export const deleteTeamMember = async (id: number) => {
     throw new Error(`Error deleting team member: ${error}`);
   }
 };
+
+export const reorderTeamMembers = async (orderedIds: number[]) => {
+    try {
+        return await prisma.$transaction(
+            orderedIds.map((id, index) =>
+                prisma.teamMember.update({
+                    where: { id },
+                    data: { order: index }
+                })
+            )
+        );
+    } catch (error) {
+        throw new Error(`Error reordering team members: ${error}`);
+    }
+};

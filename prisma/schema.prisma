@@ -1,18 +1,20 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
    
 }
 
+
 model User {
   id            Int       @id @default(autoincrement())
   email         String    @unique
   name          String?
-  password      String
+  password      String?
   role          Role      @default(USER)
+  provider      String    @default("local") // "local" or "google"
+  providerId    String?   @unique
   isActive      Boolean   @default(true)
   emailVerified Boolean   @default(false)
   phone         String?
@@ -23,10 +25,18 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  posts    Post[]
-  comments Comment[]
-  friends  User[]    @relation("UserFriends")
-  friendOf User[]    @relation("UserFriends")
+  // Security
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  emailVerifyToken     String?
+
+  posts         Post[]
+  comments      Comment[]
+  postLikes     PostLike[]
+  refreshTokens RefreshToken[]
+  media         Media[]
+  friends       User[]         @relation("UserFriends")
+  friendOf      User[]         @relation("UserFriends")
 
   @@map("user")
 }
@@ -39,9 +49,14 @@ model TeamMember {
   bio       String?
   image     String?
   status    String   @default("active")
+  order     Int      @default(0)
   socials   Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  projects  Project[]
+  skills    Skill[]
+
 
   @@map("teammember")
 }
@@ -75,14 +90,29 @@ model Post {
 
   comments   Comment[]
   categories PostCategory[]
+  likes      PostLike[]
 
   @@map("post")
+}
+
+model PostLike {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  userId    Int
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([postId, userId])
+  @@map("postlike")
 }
 
 model Comment {
   id        Int       @id @default(autoincrement())
   content   String
   createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
 
   authorId Int
   postId   Int
@@ -115,8 +145,14 @@ model PostCategory {
 
 model Activity {
   id          Int      @id @default(autoincrement())
+  userId      Int?
   type        String
   description String
+  targetId    Int?
+  targetType  String?  // e.g. "Project", "Lead", "Post"
+  metadata    Json?    // stores extra details like ipAddress, previous values, etc.
+  ipAddress   String?  // explicitly stored for security logs
+  userAgent   String?  // browser/device info
   createdAt   DateTime @default(now())
 
   @@map("activity")
@@ -125,8 +161,10 @@ model Activity {
 model Visit {
   id         Int      @id @default(autoincrement())
   pagePath   String
-  deviceType String
-  source     String
+  deviceType String?
+  source     String?
+  ipAddress  String?
+  visitorId  String?  // To track an anonymous user's returning journey
   createdAt  DateTime @default(now())
 
   @@map("visit")
@@ -138,13 +176,147 @@ model ContactMessage {
   email     String
   subject   String?
   message   String
+  status    String   @default("unread") // unread, read, replied
+  visitorId String?  // Links message back to their Visit journey
   createdAt DateTime @default(now())
 
   @@map("contactmessage")
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("refreshtoken")
+}
+
+model Settings {
+  id                    Int      @id @default(1)
+  
+  // Basic Info
+  siteName              String   @default("Sohoza System")
+  siteDescription       String?  @db.Text
+  contactEmail          String?
+  contactPhone          String?
+  companyAddress        String?  @db.Text
+  
+  // Branding
+  logoUrl               String?
+  faviconUrl            String?
+  primaryColor          String?  @default("#000000")
+  secondaryColor        String?  @default("#ffffff")
+  
+  // SEO & Analytics
+  metaKeywords          String?  @db.Text
+  metaImage             String?
+  googleAnalyticsId     String?
+  
+  // Behavioral Flags
+  maintenanceMode       Boolean  @default(false)
+  maintenanceMessage    String?  @db.Text
+  requireEmailVerify    Boolean  @default(false)
+  enableBlogComments    Boolean  @default(true)
+  
+  // Links
+  socialLinks           Json?    // e.g. { "twitter": "URL", "github": "URL" }
+  termsAndConditionsUrl String?
+  privacyPolicyUrl      String?
+
+  updatedAt             DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model Media {
+  id        Int      @id @default(autoincrement())
+  url       String
+  publicId  String?
+  fileName  String?
+  fileType  String?
+  fileSize  Int?
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@map("media")
+}
+
+model NewsletterSubscription {
+  id                Int       @id @default(autoincrement())
+  email             String    @unique
+  isActive          Boolean   @default(true)
+  verificationToken String?
+  isVerified        Boolean   @default(false)
+  verifiedAt        DateTime?
+  unsubscribeToken  String?   @unique
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@map("newslettersubscription")
 }
 
 enum Role {
   SUPERADMIN
   ADMIN
   USER
+}
+
+model Skill {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  icon        String?
+  category    String?  // e.g., "Frontend", "Backend", "DevOps"
+  
+  teamMembers TeamMember[]
+  projects    Project[]
+
+  @@map("skill")
+}
+
+model Project {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  description String
+  content     String?  @db.Text
+  liveUrl     String?
+  githubUrl   String?
+  images      String[]
+  isFeatured  Boolean  @default(false)
+  status      String   @default("completed") // completed, active, building
+  
+  startDate   DateTime?
+  endDate     DateTime?
+  
+  skills      Skill[]
+  teamMembers TeamMember[]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("project")
+}
+
+model ProjectLead {
+  id          Int      @id @default(autoincrement())
+  clientName  String
+  email       String
+  company     String?
+  budget      String?
+  description String   @db.Text
+  
+  // Pipeline Stages: NEW, DISCOVERY, PROPOSAL, ACTIVE, ON_HOLD, COMPLETED, CANCELLED
+  status      String   @default("NEW")
+  visitorId   String?  // To track lead conversion funnel
+  notes       String?  @db.Text
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("projectlead")
 }

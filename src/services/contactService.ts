@@ -1,10 +1,12 @@
 import prisma from "../lib/prisma";
+import { sendContactReceipt } from "./emailService";
 
 export interface CreateContactInput {
     name: string;
     email: string;
     subject?: string;
     message: string;
+    visitorId?: string;
 }
 
 // Create a new contact message
@@ -13,6 +15,10 @@ export const createContactMessage = async (data: CreateContactInput) => {
         const newMessage = await prisma.contactMessage.create({
             data
         });
+
+        // Send automated receipt
+        await sendContactReceipt(data.email, data.name, data.subject || 'Contact Inquiry');
+
         return newMessage;
     } catch (error) {
         console.error('ORIGINAL PRISMA ERROR in createContactMessage:', error);
@@ -36,4 +42,19 @@ export const getAllContactMessages = async (skip: number = 0, take: number = 10)
         console.error('ORIGINAL PRISMA ERROR in getAllContactMessages:', error);
         throw new Error(`Error fetching contact messages: ${error}`);
     }
+};
+
+export const updateContactStatus = async (id: number, status: string) => {
+    return await prisma.contactMessage.update({
+        where: { id },
+        data: { status }
+    });
+};
+
+export const bulkDeleteContactMessages = async (ids: number[]) => {
+    return await prisma.contactMessage.deleteMany({
+        where: {
+            id: { in: ids }
+        }
+    });
 };

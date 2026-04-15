@@ -3,6 +3,8 @@ import * as userController from "../controllers/userController";
 import * as authController from "../controllers/authController";
 import { authenticate, authorize } from "../middleware/auth.middleware";
 import { upload } from "../middleware/upload.middleware";
+import { validate } from "../middleware/validate.middleware";
+import { loginSchema, registerSchema, googleAuthSchema } from "../validations/schemas";
 
 const router = express.Router();
 
@@ -46,7 +48,7 @@ const router = express.Router();
  * /users/register:
  *   post:
  *     summary: Register a new user
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -57,14 +59,14 @@ const router = express.Router();
  *       201:
  *         description: User registered successfully
  */
-router.post("/register", userController.createUser);
+router.post("/register", validate(registerSchema), userController.createUser);
 
 /**
  * @swagger
  * /users/login:
  *   post:
  *     summary: Login a user
- *     tags: [Auth, Users]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -83,7 +85,83 @@ router.post("/register", userController.createUser);
  *       200:
  *         description: Login successful
  */
-router.post("/login", authController.login);
+router.post("/login", validate(loginSchema), authController.login);
+
+/**
+ * @swagger
+ * /users/google:
+ *   post:
+ *     summary: Login or Register with Google
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: ID Token from Google
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *       400:
+ *         description: Invalid Google token
+ */
+router.post("/google", validate(googleAuthSchema), authController.googleLogin);
+
+/**
+ * @swagger
+ * /users/refresh-token:
+ *   post:
+ *     summary: Refresh access token
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *             properties:
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed
+ */
+router.post("/refresh-token", authController.refreshToken);
+
+/**
+ * @swagger
+ * /users/forgot-password:
+ *   post:
+ *     summary: Request password reset token
+ *     tags: [Authentication]
+ */
+router.post("/forgot-password", authController.forgotPassword);
+
+/**
+ * @swagger
+ * /users/reset-password:
+ *   post:
+ *     summary: Reset password using token
+ *     tags: [Authentication]
+ */
+router.post("/reset-password", authController.resetPassword);
+
+/**
+ * @swagger
+ * /users/verify-email/{token}:
+ *   get:
+ *     summary: Verify email address
+ *     tags: [Authentication]
+ */
+router.get("/verify-email/:token", userController.verifyEmail);
 
 
 /**
@@ -115,6 +193,17 @@ router.post("/login", authController.login);
  *         description: List of all users
  */
 router.get("/", authenticate, authorize(["ADMIN", "SUPERADMIN"]), userController.getAllUsers);
+
+/**
+ * @swagger
+ * /users/change-password:
+ *   post:
+ *     summary: Change user password
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.post("/change-password", authenticate, userController.changePassword);
 
 /**
  * @swagger
