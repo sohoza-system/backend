@@ -13,6 +13,8 @@ export interface UpdatePostInput {
     description?: string;
     content?: string;
     published?: boolean;
+    status?: string;
+    imageUrl?: string | null;
 }
 
 // Create a new post
@@ -23,6 +25,11 @@ export const createPost = async (data: CreatePostInput) => {
                 ...data,
                 authorId: Number(data.authorId)
             },
+            include: {
+                author: true,
+                comments: true,
+                categories: true,
+            }
         });
         return post;
     } catch (error) {
@@ -34,18 +41,26 @@ export const createPost = async (data: CreatePostInput) => {
 // Get all posts with pagination, search, and category filtering
 export const getAllPosts = async (skip: number = 0, take: number = 10, search?: string, category?: string) => {
     try {
-        const where: any = {
-            OR: search ? [
-                { title: { contains: search, mode: 'insensitive' } },
-                { content: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } }
-            ] : undefined,
-            categories: category ? {
+        // ✅ Build where clause cleanly — no undefined keys
+        const where: any = {};
+
+        if (search) {
+            where.OR = [
+                { title:       { contains: search, mode: 'insensitive' } },
+                { content:     { contains: search, mode: 'insensitive' } },
+                { description: { contains: search, mode: 'insensitive' } },
+            ];
+        }
+
+        if (category) {
+            where.categories = {
                 some: {
-                    name: { contains: category, mode: 'insensitive' }
+                    category: {
+                        name: { contains: category, mode: 'insensitive' }
+                    }
                 }
-            } : undefined
-        };
+            };
+        }
 
         const [posts, total] = await Promise.all([
             prisma.post.findMany({
@@ -54,13 +69,16 @@ export const getAllPosts = async (skip: number = 0, take: number = 10, search?: 
                 take,
                 orderBy: { createdAt: 'desc' },
                 include: {
-                    author: true,
-                    comments: true,
-                    categories: true
+                    author:     true,
+                    comments:   true,
+                    categories: {
+                        include: { category: true }
+                    },
                 }
             }),
             prisma.post.count({ where })
         ]);
+
         return { posts, total };
     } catch (error: any) {
         console.error("Error in getAllPosts:", error);
@@ -78,10 +96,9 @@ export const getRelatedPosts = async (postId: number, limit: number = 3) => {
 
         if (!sourcePost) throw new Error("Source post not found");
 
-        const categoryIds = sourcePost.categories.map(c => c.categoryId);
+        const categoryIds = sourcePost.categories.map((c: any) => c.categoryId);
 
         if (categoryIds.length === 0) {
-            // Fallback: Get latest posts if no categories
             return await prisma.post.findMany({
                 where: { id: { not: postId } },
                 take: limit,
@@ -89,7 +106,6 @@ export const getRelatedPosts = async (postId: number, limit: number = 3) => {
             });
         }
 
-        // Find posts with the most common categories
         const relatedPosts = await prisma.post.findMany({
             where: {
                 id: { not: postId },
@@ -101,12 +117,10 @@ export const getRelatedPosts = async (postId: number, limit: number = 3) => {
             },
             take: limit,
             include: {
-                categories: true,
+                categories: { include: { category: true } },
                 author: true
             },
-            orderBy: {
-                createdAt: 'desc' // Secondary sort by date
-            }
+            orderBy: { createdAt: 'desc' }
         });
 
         return relatedPosts;
@@ -122,13 +136,12 @@ export const getPostById = async (id: number) => {
         const post = await prisma.post.findUnique({
             where: { id },
             include: {
-                author: true,
-                comments: true,
+                author:     true,
+                comments:   true,
+                categories: { include: { category: true } },
             },
         });
-        if (!post) {
-            throw new Error("Post not found");
-        }
+        if (!post) throw new Error("Post not found");
         return post;
     } catch (error) {
         console.error("Error in getPostById:", error);
@@ -145,6 +158,11 @@ export const updatePost = async (id: number, data: UpdatePostInput) => {
                 ...data,
                 updatedAt: new Date(),
             },
+            include: {
+                author:     true,
+                comments:   true,
+                categories: { include: { category: true } },
+            }
         });
         return post;
     } catch (error) {

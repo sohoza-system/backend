@@ -1,13 +1,11 @@
+// src/server.ts
 import dotenv from "dotenv";
-dotenv.config();
+dotenv.config(); // ✅ MUST be before all other imports
 
 import express from "express";
 import cors from "cors";
 import morgan from "morgan";
-import swaggerUi from "swagger-ui-express";
-import { specs } from "./config/swagger";
 import router from "./routes/index";
-import { errorHandler } from "./middleware/errorHandler";
 
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -41,24 +39,22 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs));
 app.use(express.json({ limit: "10kb" })); // Body limit
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
-// Routes
 app.use("/api", router);
 
-// Health check
 app.get("/health", (req, res) => {
   res.status(200).json({ message: "Server is running 🚀" });
 });
 
-// Final Error handling middleware
-app.use(errorHandler);
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  console.error(err);
+  res.status(err.status || 500).json({ message: err.message });
+});
 
-// Start server
 app.listen(PORT, () => {
   console.log(`\n==============================================`);
   console.log(`🚀 SOHOZA API is running on port ${PORT}`);
   console.log(`----------------------------------------------`);
   console.log(`Health:   http://localhost:${PORT}/health`);
-  console.log(`API Docs: http://localhost:${PORT}/api-docs`);
   console.log(`API Root: http://localhost:${PORT}/api`);
   console.log(`==============================================\n`);
 });

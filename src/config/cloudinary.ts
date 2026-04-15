@@ -1,10 +1,10 @@
+import 'dotenv/config'; // ✅ load env FIRST before anything else
 import { v2 as cloudinary } from 'cloudinary';
-import { ENV } from './env';
 
 cloudinary.config({
-    cloud_name: ENV.CLOUDINARY_CLOUD_NAME,
-    api_key: ENV.CLOUDINARY_API_KEY,
-    api_secret: ENV.CLOUDINARY_API_SECRET,
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME!,
+    api_key: process.env.CLOUDINARY_API_KEY!,
+    api_secret: process.env.CLOUDINARY_API_SECRET!,
 });
 
 export default cloudinary;
